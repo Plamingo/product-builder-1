@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find-Bench | 지역 분석 & 인터랙티브 지도</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    @font-face {
+        font-family: 'GMarketSans';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+        font-weight: 500;
+        font-display: swap;
+    }
+
+    /* ==========================================================================
+       DESIGN SYSTEM TOKENS (Liquid Glass System)
+       ========================================================================== */
+    :root {
+      --glass-white: rgba(255, 255, 255, 0.10);
+      --glass-white-md: rgba(255, 255, 255, 0.18);
+      --glass-white-lg: rgba(255, 255, 255, 0.28);
+      --glass-dark: rgba(0, 0, 0, 0.18);
+      --glass-border: rgba(255, 255, 255, 0.20);
+      --glass-border-subtle: rgba(255, 255, 255, 0.10);
+
+      --accent-aqua: #5ee7df;
+      --accent-violet: #b490f5;
+      --accent-rose: #f7a8c4;
+      --accent-blue: #0284c7;
+
+      --color-bg: #0b0e1a;
+      --color-surface: rgba(255, 255, 255, 0.04);
+      --color-text: #ffffff;
+      --color-text-muted: rgba(255, 255, 255, 0.65);
+      --color-text-subtle: rgba(255, 255, 255, 0.38);
+
+      --space-2xs: 4px;
+      --space-xs: 8px;
+      --space-sm: 12px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+
+      --radius-xs: 6px;
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+
+      --font-display: "Outfit", sans-serif;
+      --font-body: "GMarketSans", "DM Sans", sans-serif;
+    }
+
+    [data-theme="light"] {
+      --glass-white: rgba(255, 255, 255, 0.75);
+      --glass-white-md: rgba(255, 255, 255, 0.88);
+      --glass-dark: rgba(0, 0, 0, 0.05);
+
+      --glass-border: rgba(15, 23, 42, 0.16);
+      --glass-border-subtle: rgba(15, 23, 42, 0.12);
+
+      --color-bg: #eef4fb;
+      --color-surface: rgba(255, 255, 255, 0.7);
+      --color-text: #0f172a;
+      --color-text-muted: #334155;
+      --color-text-subtle: #64748b;
+
+      --accent-aqua: #0284c7;
+      --accent-violet: #6d28d9;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--color-text);
+      background: var(--color-bg);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    [data-theme="light"] body {
+      color: #0f172a;
+    }
+
+    /* --------------------------------------------------------------------------
+       HEADER NAVBAR (Identical to index.html)
+       -------------------------------------------------------------------------- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(11, 15, 26, 0.72);
+      border-bottom: 1px solid var(--glass-border);
+      transition: background 360ms ease;
+    }
+
+    [data-theme="light"] header {
+      background: rgba(237, 242, 249, 0.78);
+    }
+
+    .header-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-lg);
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--color-text);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+    }
+    [data-theme="light"] .brand-logo {
+      color: #0f172a;
+    }
+
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-aqua);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0b0e1a;
+      font-size: 1rem;
+      box-shadow: 0 0 20px rgba(94, 231, 223, 0.4);
+    }
+
+    /* Status Pill Badge (Matching test_app11) */
+    .glass-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .glass-badge--aqua {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #f59e0b;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+    }
+    [data-theme="light"] .glass-badge--aqua {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #d97706;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+      animation: blink 1.2s ease infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    .badge-count-pill {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 9999px;
+      padding: 1px 5px;
+      min-width: 16px;
+      text-align: center;
+      line-height: 1.2;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Favorite Modal Window Styles (Matching test_app12 Design System) */
+    .fav-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1050;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: var(--space-md);
+    }
+    .fav-modal.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .fav-modal-overlay {
+      position: absolute;
+      inset: 0;
+    }
+
+    .fav-modal-dialog {
+      position: relative;
+      z-index: 10;
+      width: min(840px, 92vw);
+      max-height: 85vh;
+      background: rgba(16, 20, 40, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55), 0 8px 24px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      color: #ffffff;
+      overflow: hidden;
+      transform: translateY(24px) scale(0.96);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+    }
+
+    /* Top accent gradient stripe from test_app12 */
+    .fav-modal-dialog::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(
+        90deg,
+        var(--accent-aqua) 0%,
+        var(--accent-violet) 50%,
+        var(--accent-rose) 100%
+      );
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .fav-modal.is-open .fav-modal-dialog {
+      transform: translateY(0) scale(1);
+    }
+
+    [data-theme="light"] .fav-modal {
+      background: rgba(15, 23, 42, 0.45);
+    }
+    [data-theme="light"] .fav-modal-dialog {
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(15, 23, 42, 0.12);
+      color: #0f172a;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    .fav-modal-header {
+      padding: var(--space-lg) var(--space-xl);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    [data-theme="light"] .fav-modal-header {
+      border-bottom-color: rgba(15, 23, 42, 0.08);
+      background: rgba(15, 23, 42, 0.02);
+    }
+
+    .fav-modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fav-modal-body {
+      padding: var(--space-xl);
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .fav-empty-state {
+      text-align: center;
+      padding: 40px var(--space-md);
+      color: var(--color-text-subtle);
+    }
+    .fav-empty-state i {
+      font-size: 2.8rem;
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .fav-modal-footer {
+      padding: var(--space-md) var(--space-xl);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.18);
+    }
+    [data-theme="light"] .fav-modal-footer {
+      border-top-color: rgba(15, 23, 42, 0.08);
+      background: #f8fafc;
+    }
+
+    .fav-count-info {
+      font-size: 0.85rem;
+      color: var(--color-text-subtle);
+    }
+
+    .fav-remove-btn {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .fav-remove-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-aqua);
+      color: #0b0e1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      list-style: none;
+      gap: 8px;
+    }
+
+    .nav-item a {
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    [data-theme="light"] .nav-item a {
+      color: #334155;
+    }
+
+    .nav-item.active a, .nav-item a:hover {
+      color: var(--color-text);
+      background: var(--glass-white-md);
+      border: 1px solid var(--glass-border-subtle);
+    }
+    [data-theme="light"] .nav-item.active a,
+    [data-theme="light"] .nav-item a:hover {
+      color: #0f172a;
+      background: rgba(15, 23, 42, 0.06);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .glass-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-white);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--color-text);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .glass-btn {
+      color: #0f172a;
+    }
+
+    .glass-btn--primary {
+      background: #0284c7;
+      color: #ffffff !important;
+      border: none;
+    }
+
+    .glass-btn--icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    /* --------------------------------------------------------------------------
+       MAIN CONTENT: SIDEBAR + MAP
+       -------------------------------------------------------------------------- */
+    .analysis-container {
+      display: flex;
+      height: calc(100vh - 70px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Sidebar list */
+    .analysis-sidebar {
+      width: 380px;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+    [data-theme="light"] .analysis-sidebar {
+      background: #ffffff;
+      border-right-color: #cbd5e1;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 12px 0;
+      gap: 4px;
+    }
+    [data-theme="light"] .sidebar-tabs {
+      border-bottom-color: #e2e8f0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .tab-btn {
+      color: #64748b;
+    }
+
+    .tab-btn.active {
+      color: var(--accent-aqua);
+      border-bottom-color: var(--accent-aqua);
+    }
+
+    .sidebar-search-box {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    [data-theme="light"] .sidebar-search-box {
+      border-bottom-color: #e2e8f0;
+    }
+
+    .search-input-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input-inner input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border-subtle);
+      background: var(--glass-white);
+      color: var(--color-text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    [data-theme="light"] .search-input-inner input {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .search-input-inner i {
+      position: absolute;
+      left: 12px;
+      font-size: 0.85rem;
+      color: var(--color-text-subtle);
+    }
+
+    .apt-list-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .apt-item-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .apt-item-card {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+    }
+
+    .apt-item-card:hover {
+      background: rgba(255, 255, 255, 0.09);
+      transform: translateY(-2px);
+      border-color: var(--accent-aqua);
+    }
+    [data-theme="light"] .apt-item-card:hover {
+      background: #e0f2fe;
+      border-color: #0284c7;
+    }
+
+    .apt-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .apt-card-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .apt-rank-tag {
+      background: rgba(94, 231, 223, 0.18);
+      color: var(--accent-aqua);
+      font-size: 0.70rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .apt-card-addr {
+      font-size: 0.75rem;
+      color: var(--color-text-subtle);
+      margin-bottom: 8px;
+    }
+
+    .apt-card-prices {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .apt-price-val {
+      font-weight: 800;
+      color: #059669;
+    }
+
+    /* Map container */
+    .map-container {
+      flex: 1;
+      height: 100%;
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .custom-pin-wrap {
+      background: none !important;
+      border: none !important;
+    }
+
+    /* Custom Leaflet Marker Badges */
+    .custom-map-pin {
+      background: #0284c7;
+      color: #ffffff;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 11px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: 1.5px solid #ffffff;
+      cursor: pointer;
+      text-align: center;
+    }
+    .custom-map-pin .pin-name {
+      display: block;
+      font-size: 10px;
+      opacity: 0.9;
+    }
+
+    /* --------------------------------------------------------------------------
+       DETAIL DRAWER PANEL
+       -------------------------------------------------------------------------- */
+    .detail-drawer {
+      position: fixed;
+      top: 70px;
+      right: -520px;
+      width: 480px;
+      height: calc(100vh - 70px);
+      background: rgba(16, 20, 40, 0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-left: 1px solid rgba(255, 255, 255, 0.16);
+      z-index: 990;
+      transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.55);
+    }
+    .detail-drawer.is-open {
+      right: 0;
+    }
+
+    [data-theme="light"] .detail-drawer {
+      background: #ffffff;
+      border-left-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .drawer-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    [data-theme="light"] .drawer-header {
+      border-bottom-color: #e2e8f0;
+    }
+
+    .drawer-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+
+    .drawer-addr {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    .drawer-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drawer-content {
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .metric-box {
+      padding: 12px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    [data-theme="light"] .metric-box {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+    }
+
+    .metric-lbl {
+      font-size: 0.72rem;
+      color: var(--color-text-subtle);
+    }
+
+    .metric-val {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .chart-box {
+      width: 100%;
+      height: 200px;
+    }
+
+    /* Calculator */
+    .calc-box {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    [data-theme="light"] .calc-box {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+    }
+
+    .calc-input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--glass-border-subtle);
+      background: var(--glass-white);
+      color: var(--color-text);
+      font-size: 0.85rem;
+    }
+    [data-theme="light"] .calc-input {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    /* Proximity Sidebar from index.html */
+    .sidebar-trigger-zone {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 20px;
+      height: 100vh;
+      z-index: 997;
+      cursor: pointer;
+    }
+    .sidebar-trigger-pill {
+      position: absolute;
+      top: 50%;
+      left: 4px;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 52px;
+      border-radius: var(--radius-full);
+      background: var(--accent-aqua);
+      opacity: 0.5;
+      transition: opacity 0.2s, height 0.2s;
+    }
+    .sidebar-trigger-zone:hover .sidebar-trigger-pill {
+      opacity: 1;
+      height: 84px;
+    }
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 26, 0.45);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 997;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-overlay.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sidebar-drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 300px;
+      height: 100vh;
+      z-index: 999;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(24px);
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 12px 0 40px rgba(0, 0, 0, 0.45);
+      transform: translateX(-100%);
+      transition: transform 0.35s cubic-bezier(0.22, 0.68, 0, 1.2);
+      display: flex;
+      flex-direction: column;
+      color: #ffffff;
+      overflow-y: auto;
+    }
+    .sidebar-drawer.is-active {
+      transform: translateX(0);
+    }
+    [data-theme="light"] .sidebar-drawer {
+      background: #ffffff;
+      border-right-color: #cbd5e1;
+      box-shadow: 12px 0 40px rgba(15, 23, 42, 0.12);
+      color: #0f172a;
+    }
+    .sidebar-header {
+      padding: var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    [data-theme="light"] .sidebar-header {
+      border-bottom-color: #e2e8f0;
+    }
+    .sidebar-close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .sidebar-close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg);
+    }
+    [data-theme="light"] .sidebar-close-btn {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .sidebar-body {
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+      flex: 1;
+    }
+    .sidebar-group-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-subtle);
+      margin-bottom: 8px;
+    }
+    [data-theme="light"] .sidebar-group-title {
+      color: #64748b;
+    }
+    .sidebar-nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sidebar-nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .sidebar-nav-item a {
+      color: #334155;
+    }
+    .sidebar-nav-item a:hover {
+      color: var(--color-text);
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateX(4px);
+    }
+    [data-theme="light"] .sidebar-nav-item a:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .sidebar-nav-item.active a {
+      color: #ffffff !important;
+      background: #0284c7 !important;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+    }
+    .sidebar-nav-icon {
+      width: 20px;
+      text-align: center;
+      font-size: 1rem;
+    }
+    .sidebar-badge {
+      margin-left: auto;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: rgba(94, 231, 223, 0.2);
+      color: var(--accent-aqua);
+    }
+    [data-theme="light"] .sidebar-badge {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+    .sidebar-footer {
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
+    }
+    [data-theme="light"] .sidebar-footer {
+      border-top-color: #e2e8f0;
+    }
+    .sidebar-user-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sidebar-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #0284c7;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .sidebar-user-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-user-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .sidebar-user-role {
+      font-size: 0.72rem;
+      color: var(--color-text-subtle);
+    }
+    [data-theme="light"] .sidebar-user-role {
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hover Proximity Left Trigger -->
+  <div id="sidebar-trigger-zone" class="sidebar-trigger-zone">
+    <div class="sidebar-trigger-pill"></div>
+  </div>
+
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- Off-Canvas Sidebar Drawer -->
+  <aside id="sidebar-drawer" class="sidebar-drawer">
+    <div class="sidebar-header">
+      <a href="index.html" class="brand-logo">
+        <div class="logo-badge"><i class="fa-solid fa-building-user"></i></div>
+        Find-Bench
+      </a>
+      <button id="sidebar-close-btn" class="sidebar-close-btn" title="사이드바 닫기">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-body">
+      <!-- Group 1: 주요 서비스 -->
+      <div>
+        <div class="sidebar-group-title">주요 서비스</div>
+        <ul class="sidebar-nav-list">
+          <li class="sidebar-nav-item">
+            <a href="index.html"><i class="fa-solid fa-chart-line sidebar-nav-icon"></i> 국토부 실거래가 <span class="sidebar-badge">LIVE</span></a>
+          </li>
+          <li class="sidebar-nav-item active">
+            <a href="region_analysis.html"><i class="fa-solid fa-map-location-dot sidebar-nav-icon"></i> 지역별 시세 지도</a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-city sidebar-nav-icon"></i> 인기 아파트 단지</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Group 2: 분석 & 리포트 -->
+      <div>
+        <div class="sidebar-group-title">분석 & 리포트</div>
+        <ul class="sidebar-nav-list">
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-arrow-trend-up sidebar-nav-icon"></i> 가격 변동 트렌드</a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-scale-balanced sidebar-nav-icon"></i> 단지 시세 비교</a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-file-invoice-dollar sidebar-nav-icon"></i> 분기별 통계 리포트</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Group 3: 사용자 설정 -->
+      <div>
+        <div class="sidebar-group-title">설정 및 지원</div>
+        <ul class="sidebar-nav-list">
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-bell sidebar-nav-icon"></i> 실거래가 알림 <span class="sidebar-badge">HOT</span></a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-bookmark sidebar-nav-icon"></i> 관심 단지 즐겨찾기</a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-gear sidebar-nav-icon"></i> 시스템 환경설정</a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#"><i class="fa-solid fa-circle-question sidebar-nav-icon"></i> 도움말 & FAQ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Sidebar Footer Profile -->
+    <div class="sidebar-footer">
+      <div class="sidebar-user-card">
+        <div class="sidebar-avatar">J</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name">Jackson</span>
+          <span class="sidebar-user-role">Find-Bench Pro Membership</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Header Navbar -->
+  <header>
+    <div class="header-inner">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <button id="sidebar-toggle-btn" class="glass-btn glass-btn--icon" title="사이드바 메뉴 열기">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <a href="index.html" class="brand-logo">
+          <div class="logo-badge"><i class="fa-solid fa-building-user"></i></div>
+          Find-Bench
+        </a>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="nav-item active"><a href="region_analysis.html"><i class="fa-solid fa-map-location-dot"></i> 지역 분석</a></li>
+        <li class="nav-item"><a href="index.html"><i class="fa-solid fa-chart-line"></i> 국토부 실거래가</a></li>
+        <li class="nav-item"><a href="#"><i class="fa-solid fa-layer-group"></i> 트렌드</a></li>
+      </ul>
+
+      <div class="nav-right">
+        <div class="glass-badge glass-badge--aqua" title="실시간 사용자 접속 수">
+          <span class="badge-dot"></span>
+          <span id="live-user-count">3,842명 실시간 접속</span>
+        </div>
+        <button id="fav-btn" class="glass-btn glass-btn--icon" title="관심 아파트 목록" style="position: relative;">
+          <i class="fa-solid fa-bookmark"></i>
+          <span id="fav-count-badge" class="badge-count-pill">0</span>
+        </button>
+        <button id="theme-toggle" class="glass-btn glass-btn--icon" title="다크/라이트 모드 전환">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="glass-btn glass-btn--primary">
+          <i class="fa-solid fa-share-nodes"></i> 공유
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Analysis Section -->
+  <div class="analysis-container">
+    <!-- Left Sidebar Panel -->
+    <aside class="analysis-sidebar">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="all">🔥 인기 단지</button>
+        <button class="tab-btn" data-tab="seocho">서초구</button>
+        <button class="tab-btn" data-tab="gangnam">강남/송파</button>
+        <button class="tab-btn" data-tab="mapo">마포/성동</button>
+      </div>
+
+      <div class="sidebar-search-box">
+        <div class="search-input-inner">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="mapSearchInput" placeholder="단지명 또는 동 검색 (예: 반포자이)">
+        </div>
+      </div>
+
+      <div id="aptListContainer" class="apt-list-scroll">
+        <!-- Dynamic Cards -->
+      </div>
+    </aside>
+
+    <!-- Map View -->
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+
+    <!-- Right Slide-in Detail Drawer -->
+    <div id="detailDrawer" class="detail-drawer">
+      <div class="drawer-header">
+        <div>
+          <div id="drawerTitle" class="drawer-title">반포자이</div>
+          <div id="drawerAddr" class="drawer-addr">서울특별시 서초구 반포동 20-43</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="drawerFavToggleBtn" class="glass-btn" style="font-size:0.78rem; padding:6px 12px;">
+            <i class="fa-solid fa-star" style="color:#f59e0b;"></i> 관심 등록
+          </button>
+          <button id="drawerCloseBtn" class="drawer-close" title="닫기"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="drawer-content">
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-lbl">매매 최근 실거래가</div>
+            <div id="metricDeal" class="metric-val" style="color:#059669;">34억 5,000만</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-lbl">전세 최근 실거래가</div>
+            <div id="metricJeonse" class="metric-val" style="color:#0284c7;">18억 2,000만</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-lbl">세대수 / 건축년도</div>
+            <div id="metricInfo" class="metric-val">3,410세대 (2009년)</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-lbl">갭투자 금액</div>
+            <div id="metricGap" class="metric-val" style="color:#6d28d9;">16억 3,000만</div>
+          </div>
+        </div>
+
+        <!-- Price Chart Section -->
+        <div>
+          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-chart-line" style="color:#0284c7;"></i> 매매 / 전세 가격 추이 (최근 5년)</div>
+          <div class="chart-box">
+            <canvas id="priceChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Complex Specs & Schools -->
+        <div>
+          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-circle-info" style="color:#5ee7df;"></i> 단지 사양 및 학군 정보</div>
+          <div id="drawerSpecsBox" style="padding:12px; border-radius:var(--radius-md); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem; line-height:1.6;">
+            <div>• 동수/최고층: 44개동 / 29층 (주차대수 1.78대)</div>
+            <div>• 난방방식/건설사: 지역난방 / GS건설</div>
+            <div style="margin-top:6px; color:var(--accent-aqua); font-weight:700;">🏫 학군: 원촌초등학교 (도보 2분 초품아), 원촌중학교</div>
+          </div>
+        </div>
+
+        <!-- Confirmed Listings -->
+        <div>
+          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-tags" style="color:#059669;"></i> 현재 등록된 검증 매물</div>
+          <div id="drawerListingsBox" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="padding:10px; border-radius:var(--radius-sm); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem;">
+              <div style="display:flex; justify-content:space-between; font-weight:700;">
+                <span>108동 (고층/29층, 남향)</span>
+                <span style="color:#059669;">매매 35억원</span>
+              </div>
+              <div style="color:var(--color-text-subtle); font-size:0.75rem; margin-top:2px;">올수리 확충, 한강조망 일부, 풀옵션</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mortgage Calculator -->
+        <div>
+          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-calculator" style="color:#059669;"></i> 스마트 대출 계산기</div>
+          <div class="calc-box">
+            <div>
+              <label style="font-size:0.75rem;">매매가 (원)</label>
+              <input type="number" id="calcPrice" class="calc-input" value="3450000000" step="10000000">
+            </div>
+            <div style="display:flex; gap:8px;">
+              <div style="flex:1;">
+                <label style="font-size:0.75rem;">LTV (%)</label>
+                <input type="number" id="calcLtv" class="calc-input" value="60" min="10" max="80">
+              </div>
+              <div style="flex:1;">
+                <label style="font-size:0.75rem;">금리 (%)</label>
+                <input type="number" id="calcRate" class="calc-input" value="4.2" step="0.1">
+              </div>
+            </div>
+            <div style="font-size:0.82rem; padding:10px; background:rgba(2,132,199,0.1); border-radius:6px; color:#0284c7; font-weight:700; display:flex; justify-content:space-between;">
+              <span>예상 월 납부 원리금:</span>
+              <span id="calcMonthlyRes">1,012 만원/월</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resident Reviews -->
+        <div>
+          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-comments" style="color:#f59e0b;"></i> 입주민 실거주 이야기</div>
+          <div id="drawerReviewsBox" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Favorite Apartments Modal -->
+  <div id="fav-modal" class="fav-modal">
+    <div id="fav-modal-overlay" class="fav-modal-overlay"></div>
+    <div class="fav-modal-dialog">
+      <div class="fav-modal-header">
+        <div class="fav-modal-title">
+          <i class="fa-solid fa-star" style="color: #f59e0b;"></i>
+          관심 아파트 목록 & 실거래 내역
+        </div>
+        <button id="fav-modal-close" class="sidebar-close-btn" title="닫기">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="fav-modal-body">
+        <div id="fav-empty-state" class="fav-empty-state" style="display: none;">
+          <i class="fa-solid fa-bookmark"></i>
+          <p>등록된 관심 아파트가 없습니다.<br>단지 목록 또는 상세 정보에서 ⭐ 관심 단지를 추가해보세요!</p>
+        </div>
+
+        <div id="fav-list-table-wrap" class="fav-list-table-wrap">
+          <table class="glass-table fav-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>아파트명</th>
+                <th>지역</th>
+                <th>매매 최근가</th>
+                <th>전세가</th>
+                <th>갭금액</th>
+                <th style="text-align: center;">관심 해제</th>
+              </tr>
+            </thead>
+            <tbody id="fav-table-body">
+              <!-- Dynamic Favorite Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="fav-modal-footer">
+        <span id="fav-modal-count" class="fav-count-info">총 0개 단지 보관 중</span>
+        <button id="fav-modal-confirm" class="glass-btn glass-btn--primary">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet & Chart.js -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // Premium Apartment Dataset
+    const APARTMENTS = [
+      {
+        id: "banpo-xi",
+        name: "반포자이",
+        address: "서울특별시 서초구 반포동 20-43",
+        district: "서초구",
+        lat: 37.5055,
+        lng: 127.0135,
+        price: "34억 5,000만",
+        priceVal: 345000,
+        jeonsePrice: "18억 2,000만",
+        gap: "16억 3,000만",
+        households: "3,410세대",
+        builtYear: "2009년",
+        rank: 1,
+        specs: { buildings: 44, maxFloor: 29, parking: "1.78대", heating: "지역난방", construction: "GS건설", far: "269%", bcr: "13%" },
+        schools: [
+          { name: "원촌초등학교", type: "초등", distance: "도보 2분 (초품아)", score: "A+" },
+          { name: "원촌중학교", type: "중등", distance: "도보 5분", score: "96.4%" }
+        ],
+        tradeHistory: {
+          labels: ['22.01', '22.07', '23.01', '23.07', '24.01', '24.07', '25.01', '25.07', '26.01'],
+          deals: [31.5, 33.0, 30.2, 32.5, 33.8, 34.0, 34.2, 34.3, 34.5],
+          jeonses: [17.0, 17.5, 15.5, 16.2, 17.0, 17.5, 17.8, 18.0, 18.2]
+        },
+        listings: [
+          { bldg: "108동", floor: "고층/29층", dir: "남향", type: "매매", price: "35억", desc: "올수리 확충, 한강조망 일부, 풀옵션", agent: "자이 으뜸 공인" },
+          { bldg: "112동", floor: "중층/28층", dir: "남동향", type: "매매", price: "34억 2,000만", desc: "로얄동 로얄층, 세끼고 갭투자 강추", agent: "반포 베스트 부동산" }
+        ],
+        reviews: [
+          { author: "반포주민1004", rating: 5, date: "2026.02.01", text: "원촌초 초품아라 아이 키우기 대한민국 최고입니다. 지하철 7,9호선 더블역세권에 단지내 수영장 커뮤니티 대만족!", tags: ["초품아", "역세권"] }
+        ]
+      },
+      {
+        id: "acro-river-park",
+        name: "아크로리버파크",
+        address: "서울특별시 서초구 반포동 2-1",
+        district: "서초구",
+        lat: 37.5098,
+        lng: 126.9968,
+        price: "42억 0,000만",
+        priceVal: 420000,
+        jeonsePrice: "21억 5,000만",
+        gap: "20억 5,000만",
+        households: "1,612세대",
+        builtYear: "2016년",
+        rank: 2,
+        specs: { buildings: 15, maxFloor: 38, parking: "1.84대", heating: "지역난방", construction: "DL이앤씨", far: "299%", bcr: "19%" },
+        schools: [
+          { name: "계성초등학교", type: "초등", distance: "도보 4분", score: "사립 Top" },
+          { name: "신반포중학교", type: "중등", distance: "도보 3분", score: "98.1%" }
+        ],
+        tradeHistory: {
+          labels: ['22.01', '22.07', '23.01', '23.07', '24.01', '24.07', '25.01', '25.07', '26.01'],
+          deals: [38.0, 39.5, 36.0, 38.5, 40.0, 41.2, 41.5, 41.8, 42.0],
+          jeonses: [20.0, 20.5, 18.0, 19.5, 20.2, 20.8, 21.0, 21.2, 21.5]
+        },
+        listings: [
+          { bldg: "101동", floor: "고층/38층", dir: "남향", type: "매매", price: "43억 5,000만", desc: "파노라마 한강뷰, 하이엔드 인테리어", agent: "아크로 센트럴 공인" }
+        ],
+        reviews: [
+          { author: "한강뷰매니아", rating: 5, date: "2026.02.04", text: "스카이라운지 조식 서비스와 한강공원 직통 연결 통로가 최고입니다. 대장주의 품격.", tags: ["한강뷰", "조식서비스"] }
+        ]
+      },
+      {
+        id: "helio-city",
+        name: "헬리오시티",
+        address: "서울특별시 송파구 가락동 958",
+        district: "송파구",
+        lat: 37.4975,
+        lng: 127.1072,
+        price: "21억 8,000만",
+        priceVal: 218000,
+        jeonsePrice: "11억 5,000만",
+        gap: "10억 3,000만",
+        households: "9,510세대",
+        builtYear: "2018년",
+        rank: 3,
+        specs: { buildings: 84, maxFloor: 35, parking: "1.32대", heating: "지역난방", construction: "현대/삼성/HDC", far: "285%", bcr: "19%" },
+        schools: [
+          { name: "가락초등학교", type: "초등", distance: "단지내 (초품아)", score: "A" },
+          { name: "해누리중학교", type: "중등", distance: "단지내", score: "92.5%" }
+        ],
+        tradeHistory: {
+          labels: ['22.01', '22.07', '23.01', '23.07', '24.01', '24.07', '25.01', '25.07', '26.01'],
+          deals: [21.0, 19.5, 16.5, 19.0, 20.2, 20.8, 21.2, 21.5, 21.8],
+          jeonses: [11.0, 10.0, 8.5, 9.8, 10.5, 10.8, 11.0, 11.2, 11.5]
+        },
+        listings: [
+          { bldg: "312동", floor: "고층/35층", dir: "남향", type: "매매", price: "22억", desc: "탄천 조망, 수리 완료, 송파역 초역세권", agent: "헬리오 리더스 공인" }
+        ],
+        reviews: [
+          { author: "송파맘", rating: 4.8, date: "2026.01.28", text: "9,510세대 대단지의 위엄! 단지 내 상가에 병원, 학원, 마트 전부 다 있어서 원스톱 생활 가능.", tags: ["대단지", "슬세권"] }
+        ]
+      },
+      {
+        id: "mapo-raemian-prugio",
+        name: "마포래미안푸르지오",
+        address: "서울특별시 마포구 아현동 777",
+        district: "마포구",
+        lat: 37.5540,
+        lng: 126.9555,
+        price: "18억 5,000만",
+        priceVal: 185000,
+        jeonsePrice: "10억 2,000만",
+        gap: "8억 3,000만",
+        households: "3,885세대",
+        builtYear: "2014년",
+        rank: 4,
+        specs: { buildings: 51, maxFloor: 30, parking: "1.21대", heating: "도시가스", construction: "삼성물산/대우건설", far: "249%", bcr: "17%" },
+        schools: [
+          { name: "한서초등학교", type: "초등", distance: "도보 3분", score: "A" },
+          { name: "아현중학교", type: "중등", distance: "도보 6분", score: "89.3%" }
+        ],
+        tradeHistory: {
+          labels: ['22.01', '22.07', '23.01', '23.07', '24.01', '24.07', '25.01', '25.07', '26.01'],
+          deals: [18.2, 17.5, 14.8, 16.5, 17.4, 17.9, 18.1, 18.3, 18.5],
+          jeonses: [9.5, 9.0, 7.8, 8.8, 9.5, 9.8, 10.0, 10.1, 10.2]
+        },
+        listings: [
+          { bldg: "204동", floor: "고층/28층", dir: "남향", type: "매매", price: "18억 8,000만", desc: "광화문 여의도 출퇴근 직주근접 15분", agent: "마래푸 대표 공인" }
+        ],
+        reviews: [
+          { author: "직장인A", rating: 4.7, date: "2026.01.15", text: "여의도, 광화문 직장인들에게 최고의 아파트입니다. 5호선 애오개역, 2호선 아현역 다 가까워요.", tags: ["직주근접"] }
+        ]
+      },
+      {
+        id: "gaepo-president-xi",
+        name: "개포자이프레지던스",
+        address: "서울특별시 강남구 개포동 189",
+        district: "강남구",
+        lat: 37.4832,
+        lng: 127.0678,
+        price: "31억 0,000만",
+        priceVal: 310000,
+        jeonsePrice: "16억 0,000만",
+        gap: "15억 0,000만",
+        households: "3,375세대",
+        builtYear: "2023년",
+        rank: 5,
+        specs: { buildings: 35, maxFloor: 35, parking: "1.74대", heating: "지역난방", construction: "GS건설", far: "249%", bcr: "18%" },
+        schools: [
+          { name: "개포초등학교", type: "초등", distance: "단지내 (초품아)", score: "Top" },
+          { name: "구룡중학교", type: "중등", distance: "도보 5분", score: "97.5%" }
+        ],
+        tradeHistory: {
+          labels: ['22.01', '22.07', '23.01', '23.07', '24.01', '24.07', '25.01', '25.07', '26.01'],
+          deals: [26.0, 27.5, 28.0, 29.2, 30.0, 30.5, 30.8, 30.9, 31.0],
+          jeonses: [13.5, 14.0, 14.2, 14.8, 15.2, 15.5, 15.8, 15.9, 16.0]
+        },
+        listings: [
+          { bldg: "402동", floor: "고층/35층", dir: "남향", type: "매매", price: "31억 5,000만", desc: "신축 대단지 인피니티풀 최신 커뮤니티", agent: "개포 자이 전문 공인" }
+        ],
+        reviews: [
+          { author: "강남주민", rating: 4.9, date: "2026.02.02", text: "개포 신축 조경과 인피니티풀 커뮤니티 수준이 예술입니다. 대치동 학원가셔틀도 편리함.", tags: ["신축대장", "커뮤니티"] }
+        ]
+      },
+      {
+        id: "trimage",
+        name: "성수 트리마제",
+        address: "서울특별시 성동구 성수동1가 547-1",
+        district: "성동구",
+        lat: 37.5388,
+        lng: 127.0442,
+        price: "48억 0,000만",
+        priceVal: 480000,
+        jeonsePrice: "26억 0,000만",
+        gap: "22억 0,000만",
+        households: "688세대",
+        builtYear: "2017년",
+        rank: 6,
+        specs: { buildings: 4, maxFloor: 47, parking: "1.62대", heating: "지역난방", construction: "두산중공업", far: "399%", bcr: "24%" },
+        schools: [
+          { name: "경일초등학교", type: "초등", distance: "도보 6분", score: "A" }
+        ],
+        tradeHistory: {
+          labels: ['22.01', '22.07', '23.01', '23.07', '24.01', '24.07', '25.01', '25.07', '26.01'],
+          deals: [42.0, 43.5, 41.0, 44.0, 45.5, 46.8, 47.2, 47.6, 48.0],
+          jeonses: [23.0, 23.5, 21.5, 23.0, 24.5, 25.2, 25.6, 25.8, 26.0]
+        },
+        listings: [
+          { bldg: "101동", floor: "고층/45층", dir: "남향", type: "매매", price: "49억", desc: "영구 파노라마 한강 조망, 조식 및 발렛파킹 서비스", agent: "트리마제 럭셔리 공인" }
+        ],
+        reviews: [
+          { author: "성수셀럽", rating: 5, date: "2026.02.06", text: "호텔식 컨시어지 서비스, 발렛, 조식뷔페, 서울숲 1분 거리 연예인 최애 단지.", tags: ["호텔식", "서울숲"] }
+        ]
+      }
+    ];
+
+    // Map & Theme Tile Layer Setup
+    let map = null;
+    let chartInstance = null;
+    let currentTileLayer = null;
+
+    const DARK_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const LIGHT_TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+    // Theme Toggle
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlEl = document.documentElement;
+    const savedTheme = localStorage.getItem('findbench_theme') || 'dark';
+    htmlEl.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = htmlEl.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      htmlEl.setAttribute('data-theme', newTheme);
+      localStorage.setItem('findbench_theme', newTheme);
+      updateThemeIcon(newTheme);
+      updateMapTileTheme(newTheme);
+    });
+
+    function updateThemeIcon(theme) {
+      if (!themeToggleBtn) return;
+      themeToggleBtn.innerHTML = theme === 'dark' 
+        ? '<i class="fa-solid fa-sun"></i>' 
+        : '<i class="fa-solid fa-moon"></i>';
+    }
+
+    function updateMapTileTheme(theme) {
+      if (!map) return;
+      if (currentTileLayer) {
+        map.removeLayer(currentTileLayer);
+      }
+      const tileUrl = theme === 'dark' ? DARK_TILE_URL : LIGHT_TILE_URL;
+      currentTileLayer = L.tileLayer(tileUrl, {
+        maxZoom: 19,
+        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+    }
+
+    // Proximity Sidebar
+    const sidebarDrawer = document.getElementById('sidebar-drawer');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const sidebarTrigger = document.getElementById('sidebar-trigger-zone');
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+
+    function openProximitySidebar() {
+      sidebarDrawer.classList.add('is-active');
+      sidebarOverlay.classList.add('is-active');
+    }
+    function closeProximitySidebar() {
+      sidebarDrawer.classList.remove('is-active');
+      sidebarOverlay.classList.remove('is-active');
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (e.clientX <= 25) openProximitySidebar();
+    });
+    if (sidebarTrigger) sidebarTrigger.addEventListener('mouseenter', openProximitySidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeProximitySidebar);
+    if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeProximitySidebar);
+    if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', () => {
+      sidebarDrawer.classList.toggle('is-active');
+      sidebarOverlay.classList.toggle('is-active');
+    });
+
+    // Map Initialization
+    function initMap() {
+      map = L.map('map', { zoomControl: false }).setView([37.5055, 127.0135], 12);
+      
+      const currentTheme = htmlEl.getAttribute('data-theme') || 'dark';
+      updateMapTileTheme(currentTheme);
+
+      // Render Markers
+      APARTMENTS.forEach(apt => {
+        const customIcon = L.divIcon({
+          className: 'custom-pin-wrap',
+          html: `<div class="custom-map-pin"><span class="pin-name">${apt.name}</span>${apt.price}</div>`,
+          iconSize: [84, 34],
+          iconAnchor: [42, 17]
+        });
+
+        const marker = L.marker([apt.lat, apt.lng], { icon: customIcon }).addTo(map);
+        marker.on('click', (ev) => {
+          if (ev && ev.originalEvent) ev.originalEvent.stopPropagation();
+          map.flyTo([apt.lat, apt.lng], 15, { duration: 1 });
+          openDetailDrawer(apt);
+        });
+      });
+
+      // Map Blank Location Click: Close Detail Drawer if open
+      map.on('click', () => {
+        if (detailDrawer && detailDrawer.classList.contains('is-open')) {
+          detailDrawer.classList.remove('is-open');
+        }
+      });
+
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 300);
+    }
+
+    // Render Cards in Sidebar
+    function renderAptCards(filterType = 'all', keyword = '') {
+      const container = document.getElementById('aptListContainer');
+      container.innerHTML = '';
+
+      let filtered = APARTMENTS.filter(apt => {
+        if (keyword && !apt.name.includes(keyword) && !apt.district.includes(keyword)) return false;
+        if (filterType === 'seocho' && apt.district !== '서초구') return false;
+        if (filterType === 'gangnam' && apt.district !== '강남구' && apt.district !== '송파구') return false;
+        if (filterType === 'mapo' && apt.district !== '마포구' && apt.district !== '성동구') return false;
+        return true;
+      });
+
+      filtered.forEach(apt => {
+        const card = document.createElement('div');
+        card.className = 'apt-item-card';
+        card.innerHTML = `
+          <div class="apt-card-header">
+            <div class="apt-card-title"><span class="apt-rank-tag">TOP ${apt.rank}</span> ${apt.name}</div>
+          </div>
+          <div class="apt-card-addr"><i class="fa-solid fa-location-dot"></i> ${apt.address}</div>
+          <div class="apt-card-prices">
+            <span>매매: <strong class="apt-price-val">${apt.price}</strong></span>
+            <span style="font-size:0.75rem; color:var(--color-text-subtle);">전세 ${apt.jeonsePrice}</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          map.flyTo([apt.lat, apt.lng], 15, { duration: 1.2 });
+          openDetailDrawer(apt);
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Favorite Apartments State & Modal Manager
+    // -------------------------------------------------------------
+    const PRESET_FAVORITES = [
+      { id: "banpo-xi", name: "반포자이", address: "서울특별시 서초구 반포동", price: "34억 5,000만", jeonsePrice: "18억 2,000만", gap: "16억 3,000만" },
+      { id: "acro-river-park", name: "아크로리버파크", address: "서울특별시 서초구 반포동", price: "42억 0,000만", jeonsePrice: "21억 5,000만", gap: "20억 5,000만" },
+      { id: "helio-city", name: "헬리오시티", address: "서울특별시 송파구 가락동", price: "21억 8,000만", jeonsePrice: "11억 5,000만", gap: "10억 3,000만" }
+    ];
+
+    function getFavorites() {
+      const stored = localStorage.getItem('findbench_favorites');
+      if (!stored) {
+        localStorage.setItem('findbench_favorites', JSON.stringify(PRESET_FAVORITES));
+        return PRESET_FAVORITES;
+      }
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        return PRESET_FAVORITES;
+      }
+    }
+
+    function saveFavorites(list) {
+      localStorage.setItem('findbench_favorites', JSON.stringify(list));
+      updateFavBadgeCount(list.length);
+    }
+
+    function updateFavBadgeCount(count) {
+      const badge = document.getElementById('fav-count-badge');
+      if (badge) badge.textContent = count;
+    }
+
+    function renderFavModalTable() {
+      const favorites = getFavorites();
+      const tbody = document.getElementById('fav-table-body');
+      const emptyState = document.getElementById('fav-empty-state');
+      const tableWrap = document.getElementById('fav-list-table-wrap');
+      const countInfo = document.getElementById('fav-modal-count');
+
+      updateFavBadgeCount(favorites.length);
+      if (countInfo) countInfo.textContent = `총 ${favorites.length}개 단지 보관 중`;
+
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (favorites.length === 0) {
+        if (emptyState) emptyState.style.display = 'block';
+        if (tableWrap) tableWrap.style.display = 'none';
+        return;
+      }
+
+      if (emptyState) emptyState.style.display = 'none';
+      if (tableWrap) tableWrap.style.display = 'block';
+
+      favorites.forEach(apt => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><div class="apt-name"><i class="fa-solid fa-building" style="color:var(--accent-aqua);"></i> ${apt.name}</div></td>
+          <td>${apt.address}</td>
+          <td class="price-tag">${apt.price || '-'}</td>
+          <td><span class="glass-tag glass-tag--blue">${apt.jeonsePrice || '-'}</span></td>
+          <td><span class="glass-tag glass-tag--purple">${apt.gap || '-'}</span></td>
+          <td style="text-align: center;">
+            <button class="fav-remove-btn" data-id="${apt.id}"><i class="fa-solid fa-trash-can"></i> 삭제</button>
+          </td>
+        `;
+
+        tr.querySelector('.fav-remove-btn').addEventListener('click', () => {
+          removeFavorite(apt.id);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function removeFavorite(id) {
+      let favorites = getFavorites();
+      favorites = favorites.filter(item => item.id !== id);
+      saveFavorites(favorites);
+      renderFavModalTable();
+      if (currentActiveApt && currentActiveApt.id === id) {
+        updateDrawerFavButtonUI(id);
+      }
+    }
+
+    function toggleFavorite(apt) {
+      let favorites = getFavorites();
+      const index = favorites.findIndex(item => item.id === apt.id);
+      if (index >= 0) {
+        favorites.splice(index, 1);
+      } else {
+        favorites.push({
+          id: apt.id,
+          name: apt.name,
+          address: apt.address,
+          price: apt.price,
+          jeonsePrice: apt.jeonsePrice,
+          gap: apt.gap
+        });
+      }
+      saveFavorites(favorites);
+      updateDrawerFavButtonUI(apt.id);
+    }
+
+    function isFavorite(id) {
+      return getFavorites().some(item => item.id === id);
+    }
+
+    function updateDrawerFavButtonUI(id) {
+      const btn = document.getElementById('drawerFavToggleBtn');
+      if (!btn) return;
+      if (isFavorite(id)) {
+        btn.innerHTML = '<i class="fa-solid fa-star" style="color:#f59e0b;"></i> 관심 단지됨';
+      } else {
+        btn.innerHTML = '<i class="fa-regular fa-star"></i> 관심 등록';
+      }
+    }
+
+    const favModal = document.getElementById('fav-modal');
+    const favModalOverlay = document.getElementById('fav-modal-overlay');
+    const favModalClose = document.getElementById('fav-modal-close');
+    const favModalConfirm = document.getElementById('fav-modal-confirm');
+    const favBtn = document.getElementById('fav-btn');
+
+    function openFavModal() {
+      renderFavModalTable();
+      if (favModal) favModal.classList.add('is-open');
+    }
+    function closeFavModal() {
+      if (favModal) favModal.classList.remove('is-open');
+    }
+
+    if (favBtn) favBtn.addEventListener('click', openFavModal);
+    if (favModalOverlay) favModalOverlay.addEventListener('click', closeFavModal);
+    if (favModalClose) favModalClose.addEventListener('click', closeFavModal);
+    if (favModalConfirm) favModalConfirm.addEventListener('click', closeFavModal);
+
+    let currentActiveApt = null;
+
+    // Drawer Logic & Chart
+    const detailDrawer = document.getElementById('detailDrawer');
+    const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+    const drawerFavToggleBtn = document.getElementById('drawerFavToggleBtn');
+
+    function renderChart(apt) {
+      const ctx = document.getElementById('priceChartCanvas').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const history = apt.tradeHistory || {
+        labels: ['22.01', '22.07', '23.01', '23.07', '24.01', '24.07', '25.01', '25.07', '26.01'],
+        deals: [31.5, 33.0, 30.2, 32.5, 33.8, 34.0, 34.2, 34.3, 34.5],
+        jeonses: [17.0, 17.5, 15.5, 16.2, 17.0, 17.5, 17.8, 18.0, 18.2]
+      };
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: history.labels,
+          datasets: [
+            {
+              label: '매매 실거래가 (억원)',
+              data: history.deals,
+              borderColor: '#059669',
+              backgroundColor: 'rgba(5, 150, 105, 0.08)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 3
+            },
+            {
+              label: '전세 실거래가 (억원)',
+              data: history.jeonses,
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.08)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: { font: { size: 11 }, boxWidth: 10, usePointStyle: true }
+            }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: 'rgba(200,200,200,0.1)' }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function openDetailDrawer(apt) {
+      currentActiveApt = apt;
+      document.getElementById('drawerTitle').textContent = apt.name;
+      document.getElementById('drawerAddr').textContent = apt.address;
+      document.getElementById('metricDeal').textContent = apt.price;
+      document.getElementById('metricJeonse').textContent = apt.jeonsePrice || '-';
+      document.getElementById('metricInfo').textContent = `${apt.households || '-'} (${apt.builtYear || '-'})`;
+      document.getElementById('metricGap').textContent = apt.gap || '-';
+
+      updateDrawerFavButtonUI(apt.id);
+
+      // Render Specs & Schools
+      const specsBox = document.getElementById('drawerSpecsBox');
+      if (specsBox) {
+        let specsContent = '';
+        if (apt.specs) {
+          specsContent += `<div>• 동수/최고층: ${apt.specs.buildings || '-'}개동 / ${apt.specs.maxFloor || '-'}층 (세대당 주차 ${apt.specs.parking || '-'})</div>`;
+          specsContent += `<div>• 난방/건설사: ${apt.specs.heating || '-'} / ${apt.specs.construction || '-'} (용적률 ${apt.specs.far || '-'})</div>`;
+        } else {
+          specsContent += `<div>• 난방방식 / 주차공간 쾌적 관리 단지</div>`;
+        }
+        if (apt.schools && apt.schools.length > 0) {
+          const schoolStr = apt.schools.map(s => `${s.name} (${s.distance}, ${s.score})`).join(', ');
+          specsContent += `<div style="margin-top:6px; color:var(--accent-aqua); font-weight:700;">🏫 주변 학군: ${schoolStr}</div>`;
+        }
+        specsBox.innerHTML = specsContent;
+      }
+
+      // Render Confirmed Listings
+      const listingsBox = document.getElementById('drawerListingsBox');
+      if (listingsBox) {
+        if (apt.listings && apt.listings.length > 0) {
+          listingsBox.innerHTML = apt.listings.map(item => `
+            <div style="padding:10px; border-radius:var(--radius-sm); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem;">
+              <div style="display:flex; justify-content:space-between; font-weight:700;">
+                <span>${item.bldg} (${item.floor}, ${item.dir || '남향'})</span>
+                <span style="color:#059669;">${item.type || '매매'} ${item.price}</span>
+              </div>
+              <div style="color:var(--color-text-subtle); font-size:0.75rem; margin-top:2px;">${item.desc} (${item.agent || '공인중개사'})</div>
+            </div>
+          `).join('');
+        } else {
+          listingsBox.innerHTML = `<div style="font-size:0.8rem; color:var(--color-text-subtle);">등록된 확인 매물 준비 중입니다.</div>`;
+        }
+      }
+
+      // Render Resident Reviews
+      const reviewsBox = document.getElementById('drawerReviewsBox');
+      if (reviewsBox) {
+        if (apt.reviews && apt.reviews.length > 0) {
+          reviewsBox.innerHTML = apt.reviews.map(rev => `
+            <div style="padding:12px; border-radius:var(--radius-md); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem;">
+              <div style="font-weight:700; color:#f59e0b;">★ ${rev.rating || 5.0} ${rev.author} <span style="font-size:0.7rem; color:var(--color-text-subtle); margin-left:6px;">${rev.date || ''}</span></div>
+              <div style="margin-top:4px; color:var(--color-text-muted);">${rev.text}</div>
+            </div>
+          `).join('');
+        } else {
+          reviewsBox.innerHTML = `<div style="font-size:0.8rem; color:var(--color-text-subtle);">입주민 후기 작성 대기 중입니다.</div>`;
+        }
+      }
+
+      // Update Calculator Price
+      const priceInput = document.getElementById('calcPrice');
+      if (priceInput && apt.priceVal) {
+        priceInput.value = apt.priceVal * 10000;
+        updateCalcResult();
+      }
+
+      renderChart(apt);
+      detailDrawer.classList.add('is-open');
+    }
+
+    function updateCalcResult() {
+      const calcPrice = document.getElementById('calcPrice');
+      const calcLtv = document.getElementById('calcLtv');
+      const calcRate = document.getElementById('calcRate');
+      const resEl = document.getElementById('calcMonthlyRes');
+
+      if (!calcPrice || !calcLtv || !calcRate || !resEl) return;
+
+      const price = parseFloat(calcPrice.value) || 0;
+      const ltv = parseFloat(calcLtv.value) / 100 || 0.6;
+      const rate = parseFloat(calcRate.value) / 100 || 0.042;
+
+      const loan = price * ltv;
+      const monthlyRate = rate / 12;
+      const months = 360;
+      const monthlyPay = Math.round((loan * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1));
+
+      const monthlyUk = Math.round(monthlyPay / 10000);
+      resEl.textContent = `${monthlyUk.toLocaleString()} 만원/월`;
+    }
+
+    if (drawerCloseBtn) {
+      drawerCloseBtn.addEventListener('click', () => {
+        if (detailDrawer) detailDrawer.classList.remove('is-open');
+      });
+    }
+
+    if (drawerFavToggleBtn) {
+      drawerFavToggleBtn.addEventListener('click', () => {
+        if (currentActiveApt) {
+          toggleFavorite(currentActiveApt);
+        }
+      });
+    }
+
+    // Calculator Event Listeners
+    const calcPriceInput = document.getElementById('calcPrice');
+    const calcLtvInput = document.getElementById('calcLtv');
+    const calcRateInput = document.getElementById('calcRate');
+    if (calcPriceInput) calcPriceInput.addEventListener('input', updateCalcResult);
+    if (calcLtvInput) calcLtvInput.addEventListener('input', updateCalcResult);
+    if (calcRateInput) calcRateInput.addEventListener('input', updateCalcResult);
+
+    // Search Input & Tab Buttons
+    const mapSearchInput = document.getElementById('mapSearchInput');
+    if (mapSearchInput) {
+      mapSearchInput.addEventListener('input', (e) => {
+        const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'all';
+        renderAptCards(activeTab, e.target.value.trim());
+      });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const keyword = mapSearchInput ? mapSearchInput.value.trim() : '';
+        renderAptCards(btn.dataset.tab, keyword);
+      });
+    });
+
+    // Boot
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      renderAptCards('all');
+      renderFavModalTable();
+
+      // Live Active Users Fluctuation
+      setInterval(() => {
+        const el = document.getElementById('live-user-count');
+        if (el) {
+          const count = 3840 + Math.floor(Math.random() * 15);
+          el.textContent = `${count.toLocaleString()}명 실시간 접속`;
+        }
+      }, 4000);
+    });
+  </script>
+</body>
+</html>
