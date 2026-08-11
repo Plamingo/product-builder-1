@@ -5,9 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find-Bench | 지역 분석 & 인터랙티브 지도</title>
   
-  <!-- Fonts -->
+  <!-- Resource Hints & Fonts Optimization -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://unpkg.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -236,7 +243,7 @@
     .fav-modal-dialog {
       position: relative;
       z-index: 10;
-      width: min(840px, 92vw);
+      width: min(1060px, 94vw);
       max-height: 85vh;
       background: rgba(16, 20, 40, 0.94);
       backdrop-filter: blur(20px);
@@ -1691,6 +1698,7 @@
       if (emptyState) emptyState.style.display = 'none';
       if (tableWrap) tableWrap.style.display = 'block';
 
+      const fragment = document.createDocumentFragment();
       favorites.forEach(apt => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1708,8 +1716,9 @@
           removeFavorite(apt.id);
         });
 
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
       });
+      tbody.appendChild(fragment);
     }
 
     function removeFavorite(id) {

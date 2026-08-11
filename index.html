@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find-Bench | 국토부 아파트 실거래가 조회</title>
   
-  <!-- Fonts -->
+  <!-- Resource Hints & Fonts Optimization -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -551,7 +556,7 @@
     .fav-modal-dialog {
       position: relative;
       z-index: 10;
-      width: min(840px, 92vw);
+      width: min(1060px, 94vw);
       max-height: 85vh;
       background: rgba(16, 20, 40, 0.94);
       backdrop-filter: blur(20px);
@@ -1015,6 +1020,8 @@
     .glass-table tbody tr {
       transition: background var(--dur-fast);
       background: #ffffff;
+      content-visibility: auto;
+      contain-intrinsic-size: 0 45px;
     }
 
     .glass-table tbody tr:nth-child(even) {
@@ -1729,8 +1736,8 @@
 
     let rawData = [];
     let currentSortedData = [];
-    let sortColumn = 'id';
-    let sortAscending = true;
+    let sortColumn = 'dealDateStr';
+    let sortAscending = false;
 
     // -------------------------------------------------------------
     // Left Hover Proximity Sidebar Logic
@@ -1835,6 +1842,7 @@
       if (emptyState) emptyState.style.display = 'none';
       if (tableWrap) tableWrap.style.display = 'block';
 
+      const fragment = document.createDocumentFragment();
       favorites.forEach(apt => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1852,8 +1860,9 @@
           removeFavorite(apt.id);
         });
 
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
       });
+      tbody.appendChild(fragment);
     }
 
     function removeFavorite(id) {
@@ -1907,6 +1916,15 @@
         : '<i class="fa-solid fa-moon"></i>';
     }
 
+    // Debounce Utility for Performance
+    function debounce(fn, delay = 150) {
+      let timer = null;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
     // Event Listeners
     document.getElementById('region-select').addEventListener('change', () => {
       const keyword = document.getElementById('search-input').value.trim();
@@ -1916,7 +1934,7 @@
       const keyword = document.getElementById('search-input').value.trim();
       if (keyword) fetchApartmentDeals();
     });
-    document.getElementById('search-input').addEventListener('input', handleSearch);
+    document.getElementById('search-input').addEventListener('input', debounce(handleSearch, 150));
     document.getElementById('search-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         fetchApartmentDeals();
@@ -1992,7 +2010,8 @@
       countBadge.textContent = '(조회 중...)';
 
       try {
-        let query = supabaseClient.from(TABLE_NAME).select('*');
+        let query = supabaseClient.from(TABLE_NAME)
+          .select('id, aptNm, umdNm, jibun, dealAmount, dealYear, dealMonth, dealDay, excluUseAr, floor, buildYear, sggCd');
 
         if (selectedRegion) {
           query = query.eq('sggCd', selectedRegion);
@@ -2007,7 +2026,11 @@
           query = query.or(`aptNm.ilike.%${sanitizedKeyword}%,umdNm.ilike.%${sanitizedKeyword}%,jibun.ilike.%${sanitizedKeyword}%`);
         }
 
-        const { data, error } = await query.order('id', { ascending: true });
+        const { data, error } = await query
+          .order('dealYear', { ascending: false })
+          .order('dealMonth', { ascending: false })
+          .order('dealDay', { ascending: false })
+          .limit(1000);
 
         if (error) {
           console.error('데이터 조회 실패:', error.message);
@@ -2081,6 +2104,7 @@
       emptyState.style.display = 'none';
       dealsTable.style.display = 'table';
 
+      const fragment = document.createDocumentFragment();
       dataList.forEach(item => {
         const tr = document.createElement('tr');
 
@@ -2105,8 +2129,9 @@
           <td>${buildYearStr}</td>
         `;
 
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
       });
+      tbody.appendChild(fragment);
 
       updateSortHeaderUI();
     }
