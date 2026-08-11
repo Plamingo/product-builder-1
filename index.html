@@ -1637,12 +1637,12 @@
       <div class="table-toolbar">
         <div class="table-toolbar__title">
           <i class="fa-solid fa-table-list" style="color: var(--accent-aqua);"></i> 실거래 내역 리스트
-          <span class="table-toolbar__count" id="table-count-badge">(불러오는 중...)</span>
+          <span class="table-toolbar__count" id="table-count-badge">(조회 전)</span>
         </div>
       </div>
 
       <!-- Loading Spinner -->
-      <div id="loading-state" class="loading-container">
+      <div id="loading-state" class="loading-container" style="display: none;">
         <div class="spinner"></div>
         <span>Supabase에서 실거래 데이터를 안전하게 가져오는 중...</span>
       </div>
@@ -1667,9 +1667,9 @@
       </div>
 
       <!-- Empty State View -->
-      <div id="empty-state" class="empty-state" style="display: none;">
-        <i class="fa-solid fa-folder-open"></i>
-        <p>선택하신 조건에 해당하는 아파트 실거래가 데이터가 없습니다.</p>
+      <div id="empty-state" class="empty-state">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <p>아파트명을 입력한 후 검색 버튼을 누르거나 Enter를 입력해 주세요.</p>
       </div>
     </div>
   </main>
@@ -1908,9 +1908,20 @@
     }
 
     // Event Listeners
-    document.getElementById('region-select').addEventListener('change', fetchApartmentDeals);
-    document.getElementById('year-select').addEventListener('change', fetchApartmentDeals);
+    document.getElementById('region-select').addEventListener('change', () => {
+      const keyword = document.getElementById('search-input').value.trim();
+      if (keyword) fetchApartmentDeals();
+    });
+    document.getElementById('year-select').addEventListener('change', () => {
+      const keyword = document.getElementById('search-input').value.trim();
+      if (keyword) fetchApartmentDeals();
+    });
     document.getElementById('search-input').addEventListener('input', handleSearch);
+    document.getElementById('search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        fetchApartmentDeals();
+      }
+    });
     document.getElementById('btn-search').addEventListener('click', fetchApartmentDeals);
 
     // Table Header Click Sorting
@@ -1923,7 +1934,22 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      fetchApartmentDeals();
+      // 초기에는 데이터를 조회하지 않음
+      const loadingState = document.getElementById('loading-state');
+      const dealsTable = document.getElementById('deals-table');
+      const emptyState = document.getElementById('empty-state');
+      const countBadge = document.getElementById('table-count-badge');
+
+      if (loadingState) loadingState.style.display = 'none';
+      if (dealsTable) dealsTable.style.display = 'none';
+      if (emptyState) {
+        emptyState.style.display = 'block';
+        const p = emptyState.querySelector('p');
+        if (p) p.textContent = '아파트명을 입력한 후 검색해 주세요.';
+      }
+      if (countBadge) countBadge.textContent = '(조회 전)';
+
+      updateSummaryStats([]);
 
       // Live Active Users Fluctuation
       setInterval(() => {
@@ -1946,6 +1972,19 @@
 
       const selectedRegion = document.getElementById('region-select').value;
       const selectedYear = document.getElementById('year-select').value;
+      const keyword = document.getElementById('search-input').value.trim();
+
+      if (!keyword) {
+        loadingState.style.display = 'none';
+        dealsTable.style.display = 'none';
+        emptyState.style.display = 'block';
+        const p = emptyState.querySelector('p');
+        if (p) p.textContent = '아파트명을 입력한 후 검색해 주세요.';
+        countBadge.textContent = '(0건)';
+        rawData = [];
+        updateSummaryStats([]);
+        return;
+      }
 
       loadingState.style.display = 'flex';
       dealsTable.style.display = 'none';
@@ -1963,6 +2002,11 @@
           query = query.eq('dealYear', parseInt(selectedYear, 10));
         }
 
+        const sanitizedKeyword = keyword.replace(/[\(\)',]/g, '');
+        if (sanitizedKeyword) {
+          query = query.or(`aptNm.ilike.%${sanitizedKeyword}%,umdNm.ilike.%${sanitizedKeyword}%,jibun.ilike.%${sanitizedKeyword}%`);
+        }
+
         const { data, error } = await query.order('id', { ascending: true });
 
         if (error) {
@@ -1973,7 +2017,7 @@
           return;
         }
 
-        rawData = data.map(item => {
+        rawData = (data || []).map(item => {
           let amountNum = 0;
           if (item.dealAmount) {
             amountNum = parseInt(String(item.dealAmount).replace(/,/g, '').trim(), 10) || 0;
