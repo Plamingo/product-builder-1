@@ -382,6 +382,7 @@
     try {
       const response = await fetch('/config');
       if (response.ok) {
+        console.log("OK")
         const config = await response.json();
         SUPABASE_URL = config.SUPABASE_URL || '';
         SUPABASE_ANON_KEY = config.SUPABASE_ANON_KEY || '';
