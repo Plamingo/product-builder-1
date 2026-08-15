@@ -17,30 +17,6 @@
   <link rel="dns-prefetch" href="https://unpkg.com">
   <!-- <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Naver Maps API v3 Script Loader -->
-  <script>
-    (function() {
-      const DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID';
-      const storedKey = localStorage.getItem('findbench_naver_client_id');
-      const activeKey = (storedKey && storedKey.trim() !== '' && storedKey !== 'YOUR_CLIENT_ID') 
-        ? storedKey.trim() 
-        : DEFAULT_CLIENT_ID;
-
-      window.__NAVER_CLIENT_ID__ = activeKey;
-
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.id = 'naver-map-sdk';
-      script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(activeKey) + '&submodules=geocoder';
-      script.async = false;
-      script.onerror = function() {
-        console.error('Naver Maps API load error: NCP 콘솔의 Client ID 또는 Web 서비스 URL(도메인) 설정을 확인해주세요.');
-        window.__NAVER_LOAD_ERROR__ = true;
-      };
-      document.head.appendChild(script);
-    })();
-  </script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -425,15 +401,72 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <script>
-    const response = await fetch('/config');
-    if (!response.ok) {
-      throw new Error('서버에서 설정 정보를 불러오지 못했습니다.');
+  <script type="module">
+    // -------------------------------------------------------------
+    // Smart Configuration & Dynamic Naver Maps v3 Loader
+    // -------------------------------------------------------------
+    const DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID';
+    let currentActiveMapKey = DEFAULT_CLIENT_ID;
+
+    async function loadAppConfig() {
+      // 1. 사용자 로컬스토리지 저장 키 우선
+      const storedKey = localStorage.getItem('findbench_naver_client_id');
+      if (storedKey && storedKey.trim() !== '' && storedKey !== 'YOUR_CLIENT_ID') {
+        return storedKey.trim();
+      }
+
+      // 2. Cloudflare Pages /config 엔드포인트 시도
+      try {
+        const response = await fetch('/config');
+        if (response.ok) {
+          const config = await response.json();
+          if (config.MAP_API && config.MAP_API.trim() !== '') {
+            return config.MAP_API.trim();
+          }
+        }
+      } catch (e) {
+        // 로컬 fallback 진행
+      }
+
+      // 3. 로컬 config.js 파일 fallback
+      try {
+        const localModule = await import('./config.js');
+        if (localModule.MAP_API && localModule.MAP_API.trim() !== '') {
+          return localModule.MAP_API.trim();
+        }
+      } catch (err) {
+        console.warn('config.js load warning:', err);
+      }
+
+      return DEFAULT_CLIENT_ID;
     }
-    
-    const config = await response.json();
-    const { MAP_API } = config;
-    
+
+    function injectNaverMapScript(key) {
+      return new Promise((resolve) => {
+        window.__NAVER_CLIENT_ID__ = key;
+        const scriptId = 'naver-map-sdk';
+        const oldScript = document.getElementById(scriptId);
+        if (oldScript) oldScript.remove();
+
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.id = scriptId;
+        script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(key) + '&submodules=geocoder';
+        script.async = true;
+
+        script.onload = () => {
+          resolve(true);
+        };
+        script.onerror = (err) => {
+          console.error('Naver Maps API load error: NCP 콘솔의 Client ID 또는 Web 서비스 URL(도메인) 설정을 확인해주세요.', err);
+          window.__NAVER_LOAD_ERROR__ = true;
+          resolve(false);
+        };
+
+        document.head.appendChild(script);
+      });
+    }
+
     // Premium Apartment Dataset
     const APARTMENTS = [
       {
@@ -635,7 +668,7 @@
 
     // Get Active Naver Client ID
     function getNaverClientId() {
-      return localStorage.getItem('findbench_naver_client_id') || 'YOUR_CLIENT_ID';
+      return localStorage.getItem('findbench_naver_client_id') || currentActiveMapKey || 'YOUR_CLIENT_ID';
     }
 
     // Theme Toggle
@@ -1189,9 +1222,16 @@
       });
     });
 
-    // Boot
-    document.addEventListener('DOMContentLoaded', () => {
+    // Bootstrap Application
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Fetch Key from /config or local config.js or localStorage
+      currentActiveMapKey = await loadAppConfig();
+
+      // 2. Dynamically Inject Naver Maps v3 SDK and Initialize Map
+      await injectNaverMapScript(currentActiveMapKey);
       initMap();
+
+      // 3. Render Cards and Favorites
       renderAptCards('all');
       renderFavModalTable();
 

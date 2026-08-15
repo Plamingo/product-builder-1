@@ -375,16 +375,34 @@
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    const response = await fetch('/config');
-    if (!response.ok) {
-      throw new Error('서버에서 설정 정보를 불러오지 못했습니다.');
+
+    let SUPABASE_URL = '';
+    let SUPABASE_ANON_KEY = '';
+
+    try {
+      const response = await fetch('/config');
+      if (response.ok) {
+        const config = await response.json();
+        SUPABASE_URL = config.SUPABASE_URL || '';
+        SUPABASE_ANON_KEY = config.SUPABASE_ANON_KEY || '';
+      } else {
+        throw new Error('Cloudflare /config endpoint unavailable (Status: ' + response.status + ')');
+      }
+    } catch (e) {
+      // 로컬 개발 환경 fallback: ./config.js 동적 임포트
+      try {
+        const localConfig = await import('./config.js');
+        SUPABASE_URL = localConfig.SUPABASE_URL || '';
+        SUPABASE_ANON_KEY = localConfig.SUPABASE_ANON_KEY || '';
+      } catch (err) {
+        console.warn('설정(config)을 불러오지 못했습니다. Supabase 연동이 비활성화될 수 있습니다.', err);
+      }
     }
 
-    const config = await response.json();
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = config;
-
     const TABLE_NAME = "apartment_deals";
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY) 
+      ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
+      : null;
 
     let rawData = [];
     let currentSortedData = [];
@@ -660,6 +678,13 @@
       dealsTable.style.display = 'none';
       emptyState.style.display = 'none';
       countBadge.textContent = '(조회 중...)';
+
+      if (!supabaseClient) {
+        loadingState.style.display = 'none';
+        emptyState.style.display = 'block';
+        emptyState.querySelector('p').textContent = 'Supabase 연결 설정(SUPABASE_URL, ANON_KEY)을 찾을 수 없습니다.';
+        return;
+      }
 
       try {
         let query = supabaseClient.from(TABLE_NAME)
