@@ -131,7 +131,7 @@
   <!-- Header Navbar -->
   <header>
     <div class="header-inner">
-      <div style="display: flex; align-items: center; gap: 14px;">
+      <div class="header-actions-group">
         <button id="sidebar-toggle-btn" class="glass-btn glass-btn--icon" title="사이드바 메뉴 열기">
           <i class="fa-solid fa-bars"></i>
         </button>
@@ -152,7 +152,7 @@
           <span class="badge-dot"></span>
           <span id="live-user-count">3,842명 실시간 접속</span>
         </div>
-        <button id="fav-btn" class="glass-btn glass-btn--icon" title="관심 아파트 목록" style="position: relative;">
+        <button id="fav-btn" class="glass-btn glass-btn--icon pos-relative" title="관심 아파트 목록">
           <i class="fa-solid fa-bookmark"></i>
           <span id="fav-count-badge" class="badge-count-pill">0</span>
         </button>
@@ -231,9 +231,9 @@
           <div id="drawerTitle" class="drawer-title">반포자이</div>
           <div id="drawerAddr" class="drawer-addr">서울특별시 서초구 반포동 20-43</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button id="drawerFavToggleBtn" class="glass-btn" style="font-size:0.78rem; padding:6px 12px;">
-            <i class="fa-solid fa-star" style="color:#f59e0b;"></i> 관심 등록
+        <div class="drawer-header-actions">
+          <button id="drawerFavToggleBtn" class="glass-btn drawer-fav-btn">
+            <i class="fa-solid fa-star text-amber"></i> 관심 등록
           </button>
           <button id="drawerCloseBtn" class="drawer-close" title="닫기"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -243,11 +243,11 @@
         <div class="metrics-grid">
           <div class="metric-box">
             <div class="metric-lbl">매매 최근 실거래가</div>
-            <div id="metricDeal" class="metric-val" style="color:#059669;">34억 5,000만</div>
+            <div id="metricDeal" class="metric-val metric-val--deal">34억 5,000만</div>
           </div>
           <div class="metric-box">
             <div class="metric-lbl">전세 최근 실거래가</div>
-            <div id="metricJeonse" class="metric-val" style="color:#0284c7;">18억 2,000만</div>
+            <div id="metricJeonse" class="metric-val metric-val--jeonse">18억 2,000만</div>
           </div>
           <div class="metric-box">
             <div class="metric-lbl">세대수 / 건축년도</div>
@@ -255,13 +255,13 @@
           </div>
           <div class="metric-box">
             <div class="metric-lbl">갭투자 금액</div>
-            <div id="metricGap" class="metric-val" style="color:#6d28d9;">16억 3,000만</div>
+            <div id="metricGap" class="metric-val metric-val--gap">16억 3,000만</div>
           </div>
         </div>
 
         <!-- Price Chart Section -->
         <div>
-          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-chart-line" style="color:#0284c7;"></i> 매매 / 전세 가격 추이 (최근 5년)</div>
+          <div class="drawer-section-title"><i class="fa-solid fa-chart-line text-blue"></i> 매매 / 전세 가격 추이 (최근 5년)</div>
           <div class="chart-box">
             <canvas id="priceChartCanvas"></canvas>
           </div>
@@ -269,47 +269,47 @@
 
         <!-- Complex Specs & Schools -->
         <div>
-          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-circle-info" style="color:#5ee7df;"></i> 단지 사양 및 학군 정보</div>
-          <div id="drawerSpecsBox" style="padding:12px; border-radius:var(--radius-md); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem; line-height:1.6;">
+          <div class="drawer-section-title"><i class="fa-solid fa-circle-info text-aqua"></i> 단지 사양 및 학군 정보</div>
+          <div id="drawerSpecsBox" class="drawer-specs-box">
             <div>• 동수/최고층: 44개동 / 29층 (주차대수 1.78대)</div>
             <div>• 난방방식/건설사: 지역난방 / GS건설</div>
-            <div style="margin-top:6px; color:var(--accent-aqua); font-weight:700;">🏫 학군: 원촌초등학교 (도보 2분 초품아), 원촌중학교</div>
+            <div class="drawer-school-info">🏫 학군: 원촌초등학교 (도보 2분 초품아), 원촌중학교</div>
           </div>
         </div>
 
         <!-- Confirmed Listings -->
         <div>
-          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-tags" style="color:#059669;"></i> 현재 등록된 검증 매물</div>
-          <div id="drawerListingsBox" style="display:flex; flex-direction:column; gap:8px;">
-            <div style="padding:10px; border-radius:var(--radius-sm); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem;">
-              <div style="display:flex; justify-content:space-between; font-weight:700;">
+          <div class="drawer-section-title"><i class="fa-solid fa-tags text-emerald"></i> 현재 등록된 검증 매물</div>
+          <div id="drawerListingsBox" class="drawer-listings-box">
+            <div class="drawer-listing-card">
+              <div class="listing-header-row">
                 <span>108동 (고층/29층, 남향)</span>
-                <span style="color:#059669;">매매 35억원</span>
+                <span class="text-emerald">매매 35억원</span>
               </div>
-              <div style="color:var(--color-text-subtle); font-size:0.75rem; margin-top:2px;">올수리 확충, 한강조망 일부, 풀옵션</div>
+              <div class="listing-sub-desc">올수리 확충, 한강조망 일부, 풀옵션</div>
             </div>
           </div>
         </div>
 
         <!-- Mortgage Calculator -->
         <div>
-          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-calculator" style="color:#059669;"></i> 스마트 대출 계산기</div>
+          <div class="drawer-section-title"><i class="fa-solid fa-calculator text-emerald"></i> 스마트 대출 계산기</div>
           <div class="calc-box">
             <div>
-              <label style="font-size:0.75rem;">매매가 (원)</label>
+              <label class="calc-lbl">매매가 (원)</label>
               <input type="number" id="calcPrice" class="calc-input" value="3450000000" step="10000000">
             </div>
-            <div style="display:flex; gap:8px;">
-              <div style="flex:1;">
-                <label style="font-size:0.75rem;">LTV (%)</label>
+            <div class="calc-row-2col">
+              <div class="flex-1">
+                <label class="calc-lbl">LTV (%)</label>
                 <input type="number" id="calcLtv" class="calc-input" value="60" min="10" max="80">
               </div>
-              <div style="flex:1;">
-                <label style="font-size:0.75rem;">금리 (%)</label>
+              <div class="flex-1">
+                <label class="calc-lbl">금리 (%)</label>
                 <input type="number" id="calcRate" class="calc-input" value="4.2" step="0.1">
               </div>
             </div>
-            <div style="font-size:0.82rem; padding:10px; background:rgba(2,132,199,0.1); border-radius:6px; color:#0284c7; font-weight:700; display:flex; justify-content:space-between;">
+            <div class="calc-result-badge">
               <span>예상 월 납부 원리금:</span>
               <span id="calcMonthlyRes">1,012 만원/월</span>
             </div>
@@ -318,8 +318,8 @@
 
         <!-- Resident Reviews -->
         <div>
-          <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;"><i class="fa-solid fa-comments" style="color:#f59e0b;"></i> 입주민 실거주 이야기</div>
-          <div id="drawerReviewsBox" style="display:flex; flex-direction:column; gap:8px;"></div>
+          <div class="drawer-section-title"><i class="fa-solid fa-comments text-amber"></i> 입주민 실거주 이야기</div>
+          <div id="drawerReviewsBox" class="drawer-reviews-box"></div>
         </div>
       </div>
     </div>
@@ -331,7 +331,7 @@
     <div class="fav-modal-dialog">
       <div class="fav-modal-header">
         <div class="fav-modal-title">
-          <i class="fa-solid fa-star" style="color: #f59e0b;"></i>
+          <i class="fa-solid fa-star text-amber"></i>
           관심 아파트 목록 & 실거래 내역
         </div>
         <button id="fav-modal-close" class="sidebar-close-btn" title="닫기">
@@ -340,13 +340,13 @@
       </div>
 
       <div class="fav-modal-body">
-        <div id="fav-empty-state" class="fav-empty-state" style="display: none;">
+        <div id="fav-empty-state" class="fav-empty-state is-hidden">
           <i class="fa-solid fa-bookmark"></i>
           <p>등록된 관심 아파트가 없습니다.<br>단지 목록 또는 상세 정보에서 ⭐ 관심 단지를 추가해보세요!</p>
         </div>
 
         <div id="fav-list-table-wrap" class="fav-list-table-wrap">
-          <table class="glass-table fav-table" style="width: 100%;">
+          <table class="glass-table fav-table w-full">
             <thead>
               <tr>
                 <th>아파트명</th>
@@ -354,7 +354,7 @@
                 <th>매매 최근가</th>
                 <th>전세가</th>
                 <th>갭금액</th>
-                <th style="text-align: center;">관심 해제</th>
+                <th class="text-center">관심 해제</th>
               </tr>
             </thead>
             <tbody id="fav-table-body">
@@ -374,44 +374,44 @@
   <!-- Naver Client ID Settings Modal -->
   <div id="naver-key-modal" class="fav-modal">
     <div id="naver-key-overlay" class="fav-modal-overlay"></div>
-    <div class="fav-modal-dialog" style="width: min(540px, 92vw);">
+    <div class="fav-modal-dialog key-modal-dialog">
       <div class="fav-modal-header">
         <div class="fav-modal-title">
-          <i class="fa-solid fa-key" style="color: var(--accent-aqua);"></i>
+          <i class="fa-solid fa-key text-aqua"></i>
           네이버 지도 Client ID 설정
         </div>
         <button id="naver-key-close" class="sidebar-close-btn" title="닫기">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <div class="fav-modal-body" style="padding: 24px; font-size: 0.88rem; line-height: 1.6;">
-        <p style="margin-bottom: 12px; color: var(--color-text-muted);">
+      <div class="fav-modal-body key-modal-body">
+        <p class="key-modal-desc">
           네이버 클라우드 플랫폼(NCP)에서 발급받은 <strong>Application Client ID (Key ID)</strong>를 입력하시면 네이버 지도 v3 API가 연동됩니다.
         </p>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: var(--accent-aqua);">
+        <div class="key-modal-form-group">
+          <label class="key-modal-label">
             NCP Client ID (Key ID)
           </label>
-          <input type="text" id="naver-client-id-input" class="calc-input" placeholder="예: ncpKeyId 또는 Client ID 입력" style="padding: 10px 14px; font-size: 0.9rem;">
+          <input type="text" id="naver-client-id-input" class="calc-input key-modal-input" placeholder="예: ncpKeyId 또는 Client ID 입력">
         </div>
 
         <!-- Domain / Web URL Guide for Auth Success -->
-        <div style="font-size: 0.8rem; background: rgba(56, 189, 248, 0.08); padding: 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.25); margin-bottom: 14px;">
-          <div style="font-weight: 700; color: var(--accent-aqua); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+        <div class="key-guide-box">
+          <div class="key-guide-title">
             <i class="fa-solid fa-circle-info"></i> 인증 성공을 위한 필수 설정 (NCP 콘솔)
           </div>
-          <div style="color: var(--color-text-muted); font-size: 0.78rem; line-height: 1.5;">
+          <div class="key-guide-desc">
             NCP 콘솔 &gt; AI·NAVER API &gt; Application [수정] &gt; <strong>Web 서비스 URL</strong>에 아래 현재 주소를 등록해야 401 인증 실패가 발생하지 않습니다:
           </div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
-            <code id="current-origin-url" style="color: #38bdf8; font-weight: 600; font-size: 0.82rem; word-break: break-all;"></code>
-            <button type="button" id="copy-origin-btn" class="glass-btn" style="padding: 4px 10px; font-size: 0.75rem; margin-left: auto; white-space: nowrap; cursor: pointer;">
+          <div class="key-guide-origin-wrap">
+            <code id="current-origin-url" class="key-guide-code"></code>
+            <button type="button" id="copy-origin-btn" class="glass-btn key-guide-copy-btn">
               <i class="fa-solid fa-copy"></i> 복사
             </button>
           </div>
         </div>
 
-        <div style="font-size: 0.78rem; color: var(--color-text-subtle); background: rgba(255,255,255,0.04); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border-subtle);">
+        <div class="key-guide-footer-note">
           ℹ️ Client ID 저장 시 페이지가 자동으로 새로고침되며 네이버 지도 v3 API가 활성화됩니다.
         </div>
       </div>
@@ -832,7 +832,7 @@
           <div class="apt-card-addr"><i class="fa-solid fa-location-dot"></i> ${apt.address}</div>
           <div class="apt-card-prices">
             <span>매매: <strong class="apt-price-val">${apt.price}</strong></span>
-            <span style="font-size:0.75rem; color:var(--color-text-subtle);">전세 ${apt.jeonsePrice}</span>
+            <span class="apt-card-jeonse">전세 ${apt.jeonsePrice}</span>
           </div>
         `;
 
@@ -902,12 +902,12 @@
       favorites.forEach(apt => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><div class="apt-name"><i class="fa-solid fa-building" style="color:var(--accent-aqua);"></i> ${apt.name}</div></td>
+          <td><div class="apt-name"><i class="fa-solid fa-building text-aqua"></i> ${apt.name}</div></td>
           <td>${apt.address}</td>
           <td class="price-tag">${apt.price || '-'}</td>
           <td><span class="glass-tag glass-tag--blue">${apt.jeonsePrice || '-'}</span></td>
           <td><span class="glass-tag glass-tag--purple">${apt.gap || '-'}</span></td>
-          <td style="text-align: center;">
+          <td class="text-center">
             <button class="fav-remove-btn" data-id="${apt.id}"><i class="fa-solid fa-trash-can"></i> 삭제</button>
           </td>
         `;
@@ -958,7 +958,7 @@
       const btn = document.getElementById('drawerFavToggleBtn');
       if (!btn) return;
       if (isFavorite(id)) {
-        btn.innerHTML = '<i class="fa-solid fa-star" style="color:#f59e0b;"></i> 관심 단지됨';
+        btn.innerHTML = '<i class="fa-solid fa-star text-amber"></i> 관심 단지됨';
       } else {
         btn.innerHTML = '<i class="fa-regular fa-star"></i> 관심 등록';
       }
@@ -1068,7 +1068,7 @@
         }
         if (apt.schools && apt.schools.length > 0) {
           const schoolStr = apt.schools.map(s => `${s.name} (${s.distance}, ${s.score})`).join(', ');
-          specsContent += `<div style="margin-top:6px; color:var(--accent-aqua); font-weight:700;">🏫 주변 학군: ${schoolStr}</div>`;
+          specsContent += `<div class="drawer-school-info">🏫 주변 학군: ${schoolStr}</div>`;
         }
         specsBox.innerHTML = specsContent;
       }
@@ -1078,16 +1078,16 @@
       if (listingsBox) {
         if (apt.listings && apt.listings.length > 0) {
           listingsBox.innerHTML = apt.listings.map(item => `
-            <div style="padding:10px; border-radius:var(--radius-sm); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem;">
-              <div style="display:flex; justify-content:space-between; font-weight:700;">
+            <div class="drawer-listing-card">
+              <div class="listing-header-row">
                 <span>${item.bldg} (${item.floor}, ${item.dir || '남향'})</span>
-                <span style="color:#059669;">${item.type || '매매'} ${item.price}</span>
+                <span class="text-emerald">${item.type || '매매'} ${item.price}</span>
               </div>
-              <div style="color:var(--color-text-subtle); font-size:0.75rem; margin-top:2px;">${item.desc} (${item.agent || '공인중개사'})</div>
+              <div class="listing-sub-desc">${item.desc} (${item.agent || '공인중개사'})</div>
             </div>
           `).join('');
         } else {
-          listingsBox.innerHTML = `<div style="font-size:0.8rem; color:var(--color-text-subtle);">등록된 확인 매물 준비 중입니다.</div>`;
+          listingsBox.innerHTML = `<div class="listing-sub-desc">등록된 확인 매물 준비 중입니다.</div>`;
         }
       }
 
@@ -1096,13 +1096,16 @@
       if (reviewsBox) {
         if (apt.reviews && apt.reviews.length > 0) {
           reviewsBox.innerHTML = apt.reviews.map(rev => `
-            <div style="padding:12px; border-radius:var(--radius-md); background:rgba(255,255,255,0.04); border:1px solid var(--glass-border-subtle); font-size:0.8rem;">
-              <div style="font-weight:700; color:#f59e0b;">★ ${rev.rating || 5.0} ${rev.author} <span style="font-size:0.7rem; color:var(--color-text-subtle); margin-left:6px;">${rev.date || ''}</span></div>
-              <div style="margin-top:4px; color:var(--color-text-muted);">${rev.text}</div>
+            <div class="drawer-review-card">
+              <div class="review-header-row">
+                <span class="review-author text-amber">★ ${rev.rating || 5.0} ${rev.author}</span>
+                <span class="review-date">${rev.date || ''}</span>
+              </div>
+              <div>${rev.text}</div>
             </div>
           `).join('');
         } else {
-          reviewsBox.innerHTML = `<div style="font-size:0.8rem; color:var(--color-text-subtle);">입주민 후기 작성 대기 중입니다.</div>`;
+          reviewsBox.innerHTML = `<div class="listing-sub-desc">입주민 후기 작성 대기 중입니다.</div>`;
         }
       }
 

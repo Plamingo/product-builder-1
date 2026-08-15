@@ -15,7 +15,8 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1193135733058921" crossorigin="anonymous"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1193135733058921"
+  crossorigin="anonymous"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -117,7 +118,7 @@
   <!-- Header Navbar -->
   <header>
     <div class="header-inner">
-      <div style="display: flex; align-items: center; gap: 14px;">
+      <div class="header-actions-group">
         <button id="sidebar-toggle-btn" class="glass-btn glass-btn--icon" title="사이드바 메뉴 열기">
           <i class="fa-solid fa-bars"></i>
         </button>
@@ -138,7 +139,7 @@
           <span class="badge-dot"></span>
           <span id="live-user-count">3,842명 실시간 접속</span>
         </div>
-        <button id="fav-btn" class="glass-btn glass-btn--icon" title="관심 아파트 목록" style="position: relative;">
+        <button id="fav-btn" class="glass-btn glass-btn--icon pos-relative" title="관심 아파트 목록">
           <i class="fa-solid fa-bookmark"></i>
           <span id="fav-count-badge" class="badge-count-pill">0</span>
         </button>
@@ -262,7 +263,7 @@
         </div>
 
         <!-- Year Select Dropdown -->
-        <div class="select-wrap" style="max-width: 180px;">
+        <div class="select-wrap select-wrap--compact">
           <select id="year-select" class="glass-select">
             <option value="2026" selected>📅 2026년</option>
             <option value="2025">📅 2025년</option>
@@ -288,20 +289,20 @@
     <div class="table-card glass">
       <div class="table-toolbar">
         <div class="table-toolbar__title">
-          <i class="fa-solid fa-table-list" style="color: var(--accent-aqua);"></i> 실거래 내역 리스트
+          <i class="fa-solid fa-table-list text-aqua"></i> 실거래 내역 리스트
           <span class="table-toolbar__count" id="table-count-badge">(조회 전)</span>
         </div>
       </div>
 
       <!-- Loading Spinner -->
-      <div id="loading-state" class="loading-container" style="display: none;">
+      <div id="loading-state" class="loading-container is-hidden">
         <div class="spinner"></div>
         <span>Supabase에서 실거래 데이터를 안전하게 가져오는 중...</span>
       </div>
 
       <!-- Data Table -->
       <div class="table-container">
-        <table id="deals-table" class="glass-table" style="display: none;">
+        <table id="deals-table" class="glass-table is-hidden">
           <thead>
             <tr>
               <th id="th-id" data-col="id">ID <i class="fa-solid fa-sort sort-icon"></i></th>
@@ -332,7 +333,7 @@
     <div class="fav-modal-dialog">
       <div class="fav-modal-header">
         <div class="fav-modal-title">
-          <i class="fa-solid fa-star" style="color: #f59e0b;"></i>
+          <i class="fa-solid fa-star text-amber"></i>
           관심 아파트 목록 & 실거래 내역
         </div>
         <button id="fav-modal-close" class="sidebar-close-btn" title="닫기">
@@ -341,13 +342,13 @@
       </div>
 
       <div class="fav-modal-body">
-        <div id="fav-empty-state" class="fav-empty-state" style="display: none;">
+        <div id="fav-empty-state" class="fav-empty-state is-hidden">
           <i class="fa-solid fa-bookmark"></i>
           <p>등록된 관심 아파트가 없습니다.<br>단지 목록 또는 상세 정보에서 ⭐ 관심 단지를 추가해보세요!</p>
         </div>
 
         <div id="fav-list-table-wrap" class="fav-list-table-wrap">
-          <table class="glass-table fav-table" style="width: 100%;">
+          <table class="glass-table fav-table w-full">
             <thead>
               <tr>
                 <th>아파트명</th>
@@ -355,7 +356,7 @@
                 <th>매매 최근가</th>
                 <th>전세가</th>
                 <th>갭금액</th>
-                <th style="text-align: center;">관심 해제</th>
+                <th class="text-center">관심 해제</th>
               </tr>
             </thead>
             <tbody id="fav-table-body">
@@ -491,12 +492,12 @@
       favorites.forEach(apt => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><div class="apt-name"><i class="fa-solid fa-building" style="color:var(--accent-aqua);"></i> ${apt.name}</div></td>
+          <td><div class="apt-name"><i class="fa-solid fa-building text-aqua"></i> ${apt.name}</div></td>
           <td>${apt.address}</td>
           <td class="price-tag">${apt.price || '-'}</td>
           <td><span class="glass-tag glass-tag--blue">${apt.jeonsePrice || '-'}</span></td>
           <td><span class="glass-tag glass-tag--purple">${apt.gap || '-'}</span></td>
-          <td style="text-align: center;">
+          <td class="text-center">
             <button class="fav-remove-btn" data-id="${apt.id}"><i class="fa-solid fa-trash-can"></i> 삭제</button>
           </td>
         `;
@@ -765,7 +766,7 @@
 
         tr.innerHTML = `
           <td>${item.id}</td>
-          <td><div class="apt-name"><i class="fa-regular fa-building" style="opacity:0.85;"></i> ${aptName}</div></td>
+          <td><div class="apt-name"><i class="fa-regular fa-building opacity-85"></i> ${aptName}</div></td>
           <td>${location}</td>
           <td class="price-tag">${formattedPrice}</td>
           <td>${item.dealDateStr || '-'}</td>

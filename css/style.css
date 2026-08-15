@@ -1515,6 +1515,11 @@ main {
   color: #059669;
 }
 
+.apt-card-jeonse {
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+}
+
 /* Map container & Naver Map Controls */
 .map-container {
   flex: 1;
@@ -1817,4 +1822,321 @@ main {
   background: #ffffff;
   border-color: #cbd5e1;
   color: #0f172a;
+}
+
+/* ==========================================================================
+   8. UTILITIES & HELPER CLASSES
+   ========================================================================== */
+.w-full {
+  width: 100% !important;
+}
+.is-hidden {
+  display: none !important;
+}
+.pos-relative {
+  position: relative !important;
+}
+.flex-1 {
+  flex: 1 !important;
+}
+.text-center {
+  text-align: center !important;
+}
+.text-right {
+  text-align: right !important;
+}
+.opacity-85 {
+  opacity: 0.85;
+}
+
+/* Accent Color Text Helpers */
+.text-aqua {
+  color: var(--accent-aqua) !important;
+}
+.text-amber {
+  color: #f59e0b !important;
+}
+.text-emerald {
+  color: #059669 !important;
+}
+.text-blue {
+  color: #0284c7 !important;
+}
+.text-violet {
+  color: #6d28d9 !important;
+}
+[data-theme="light"] .text-violet {
+  color: #7c3aed !important;
+}
+
+/* Header Action Group */
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.select-wrap--compact {
+  max-width: 180px;
+}
+
+/* Detail Drawer Components */
+.drawer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-fav-btn {
+  font-size: 0.78rem !important;
+  padding: 6px 12px !important;
+}
+
+.drawer-section-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawer-specs-box {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-subtle);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+[data-theme="light"] .drawer-specs-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.drawer-school-info {
+  margin-top: 6px;
+  color: var(--accent-aqua);
+  font-weight: 700;
+}
+
+.drawer-listings-box,
+.drawer-reviews-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-listing-card {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-subtle);
+  font-size: 0.8rem;
+}
+[data-theme="light"] .drawer-listing-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.listing-header-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.listing-sub-desc {
+  color: var(--color-text-subtle);
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.drawer-review-card {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-subtle);
+  font-size: 0.8rem;
+}
+[data-theme="light"] .drawer-review-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.review-header-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+
+.review-author {
+  font-weight: 700;
+}
+
+.review-date {
+  color: var(--color-text-subtle);
+}
+
+.review-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.review-tag-chip {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+[data-theme="light"] .review-tag-chip {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* Smart Calculator Helpers */
+.calc-lbl {
+  font-size: 0.75rem;
+}
+
+.calc-row-2col {
+  display: flex;
+  gap: 8px;
+}
+
+.calc-result-badge {
+  font-size: 0.82rem;
+  padding: 10px;
+  background: rgba(2, 132, 199, 0.1);
+  border-radius: 6px;
+  color: #0284c7;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+}
+[data-theme="light"] .calc-result-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+/* Metric Colors */
+.metric-val--deal {
+  color: #059669 !important;
+}
+.metric-val--jeonse {
+  color: #0284c7 !important;
+}
+.metric-val--gap {
+  color: #6d28d9 !important;
+}
+[data-theme="light"] .metric-val--gap {
+  color: #7c3aed !important;
+}
+
+/* Key Modal Custom Styles */
+.key-modal-dialog {
+  width: min(540px, 92vw) !important;
+}
+
+.key-modal-body {
+  padding: 24px !important;
+  font-size: 0.88rem !important;
+  line-height: 1.6 !important;
+}
+
+.key-modal-desc {
+  margin-bottom: 12px !important;
+  color: var(--color-text-muted) !important;
+}
+
+.key-modal-form-group {
+  margin-bottom: 16px !important;
+}
+
+.key-modal-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--accent-aqua);
+}
+
+.key-modal-input {
+  padding: 10px 14px !important;
+  font-size: 0.9rem !important;
+}
+
+.key-guide-box {
+  font-size: 0.8rem;
+  background: rgba(56, 189, 248, 0.08);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  margin-bottom: 14px;
+}
+[data-theme="light"] .key-guide-box {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.key-guide-title {
+  font-weight: 700;
+  color: var(--accent-aqua);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.key-guide-desc {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.key-guide-origin-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+[data-theme="light"] .key-guide-origin-wrap {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.key-guide-code {
+  color: #38bdf8;
+  font-weight: 600;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+[data-theme="light"] .key-guide-code {
+  color: #0284c7;
+}
+
+.key-guide-copy-btn {
+  padding: 4px 10px !important;
+  font-size: 0.75rem !important;
+  margin-left: auto !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.key-guide-footer-note {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border-subtle);
+}
+[data-theme="light"] .key-guide-footer-note {
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
