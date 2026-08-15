@@ -1614,10 +1614,6 @@ main {
   color: #0284c7;
 }
 
-.custom-pin-wrap {
-  background: none !important;
-  border: none !important;
-}
 
 /* Naver Map Marker Pin HTML */
 .naver-map-pin {

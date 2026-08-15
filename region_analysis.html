@@ -18,13 +18,9 @@
   <!-- <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Leaflet Map CSS (Fallback Support) -->
-  <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /> -->
-
   <!-- Naver Maps API v3 Script Loader -->
   <script>
     (function() {
-      // HTML 직접 수정 시 아래 기본값을 변경하거나, 웹 UI의 'Key' 버튼을 통해 입력 가능합니다.
       const DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID';
       const storedKey = localStorage.getItem('findbench_naver_client_id');
       const activeKey = (storedKey && storedKey.trim() !== '' && storedKey !== 'YOUR_CLIENT_ID') 
@@ -33,20 +29,16 @@
 
       window.__NAVER_CLIENT_ID__ = activeKey;
 
-      if (activeKey && activeKey !== 'YOUR_CLIENT_ID') {
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.id = 'naver-map-sdk';
-        script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(activeKey) + '&submodules=geocoder';
-        script.async = false;
-        script.onerror = function() {
-          console.warn('Naver Maps API load error: check Client ID or Web Service URL registration.');
-          window.__NAVER_LOAD_ERROR__ = true;
-        };
-        document.head.appendChild(script);
-      } else {
-        window.__NAVER_LOAD_ERROR__ = 'NOT_CONFIGURED';
-      }
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.id = 'naver-map-sdk';
+      script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(activeKey) + '&submodules=geocoder';
+      script.async = false;
+      script.onerror = function() {
+        console.error('Naver Maps API load error: NCP 콘솔의 Client ID 또는 Web 서비스 URL(도메인) 설정을 확인해주세요.');
+        window.__NAVER_LOAD_ERROR__ = true;
+      };
+      document.head.appendChild(script);
     })();
   </script>
   <link rel="stylesheet" href="css/style.css">
@@ -430,8 +422,7 @@
     </div>
   </div>
 
-  <!-- Leaflet & Chart.js -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
@@ -625,19 +616,14 @@
       }
     ];
 
-    // Naver Map State & Controllers
+    // Naver Maps API v3 State & Controllers
     let naverMap = null;
-    let leafletMap = null;
     let chartInstance = null;
-    let currentTileLayer = null;
     let naverMarkers = [];
     let activeTrafficLayer = null;
     let activeCadastralLayer = null;
     let isTrafficActive = false;
     let isCadastralActive = false;
-
-    const DARK_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-    const LIGHT_TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
     // Get Active Naver Client ID
     function getNaverClientId() {
@@ -657,7 +643,6 @@
       htmlEl.setAttribute('data-theme', newTheme);
       localStorage.setItem('findbench_theme', newTheme);
       updateThemeIcon(newTheme);
-      updateMapTileTheme(newTheme);
     });
 
     function updateThemeIcon(theme) {
@@ -665,18 +650,6 @@
       themeToggleBtn.innerHTML = theme === 'dark' 
         ? '<i class="fa-solid fa-sun"></i>' 
         : '<i class="fa-solid fa-moon"></i>';
-    }
-
-    function updateMapTileTheme(theme) {
-      if (leafletMap && currentTileLayer) {
-        leafletMap.removeLayer(currentTileLayer);
-        const tileUrl = theme === 'dark' ? DARK_TILE_URL : LIGHT_TILE_URL;
-        currentTileLayer = L.tileLayer(tileUrl, {
-          maxZoom: 19,
-          subdomains: 'abcd',
-          attribution: '&copy; Naver Map Base & CartoDB'
-        }).addTo(leafletMap);
-      }
     }
 
     // Proximity Sidebar
@@ -706,30 +679,23 @@
       sidebarOverlay.classList.toggle('is-active');
     });
 
-    // Main Map Initialization Entry Point
+    // Main Map Initialization Entry Point (Naver Maps API v3)
     function initMap() {
-      const activeKey = window.__NAVER_CLIENT_ID__ || getNaverClientId();
-      const isConfigured = activeKey && activeKey !== 'YOUR_CLIENT_ID';
-
       if (window.naver && window.naver.maps) {
         initNaverNativeMap();
-      } else if (isConfigured && !window.__NAVER_LOAD_ERROR__) {
-        // Wait a short moment if script is still downloading
+      } else {
         let retries = 0;
         const checkTimer = setInterval(() => {
           retries++;
           if (window.naver && window.naver.maps) {
             clearInterval(checkTimer);
             initNaverNativeMap();
-          } else if (retries > 6 || window.__NAVER_LOAD_ERROR__) {
+          } else if (retries > 10 || window.__NAVER_LOAD_ERROR__) {
             clearInterval(checkTimer);
             updateBadgeStatus('error');
-            initLeafletNaverMapFallback();
+            console.error('Naver Maps API 로드 실패: NCP Client ID 및 Web 서비스 URL 설정을 확인해주세요.');
           }
         }, 200);
-      } else {
-        updateBadgeStatus(isConfigured ? 'error' : 'unconfigured');
-        initLeafletNaverMapFallback();
       }
     }
 
@@ -745,12 +711,8 @@
         badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> NAVER MAPS API v3 Live';
         badge.style.borderColor = 'rgba(34, 197, 94, 0.5)';
         badge.style.color = '#4ade80';
-      } else if (status === 'unconfigured') {
-        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Client ID 미설정 (클릭)';
-        badge.style.borderColor = 'rgba(245, 158, 11, 0.5)';
-        badge.style.color = '#fbbf24';
       } else {
-        badge.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> 지도 인증 실패 / 대체 지도 (클릭)';
+        badge.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> 네이버 지도 연결 필요 (클릭)';
         badge.style.borderColor = 'rgba(239, 68, 68, 0.5)';
         badge.style.color = '#f87171';
       }
@@ -759,7 +721,7 @@
     // Native Naver Maps API v3 Initialization
     function initNaverNativeMap() {
       const mapContainer = document.getElementById('map');
-      if (!mapContainer) return;
+      if (!mapContainer || !window.naver || !window.naver.maps) return;
 
       const centerPos = new naver.maps.LatLng(37.5055, 127.0135);
 
@@ -789,6 +751,7 @@
         activeCadastralLayer = new naver.maps.CadastralLayer();
 
         // Render Apartment Markers
+        naverMarkers = [];
         APARTMENTS.forEach(apt => {
           const markerPos = new naver.maps.LatLng(apt.lat, apt.lng);
           const marker = new naver.maps.Marker({
@@ -831,63 +794,17 @@
         updateBadgeStatus('live');
 
       } catch (err) {
-        console.warn('Naver Maps native init fallback triggered:', err);
+        console.error('Naver Maps API 초기화 에러:', err);
         updateBadgeStatus('error');
-        initLeafletNaverMapFallback();
       }
     }
 
-    // Fallback: Leaflet Map Base Engine
-    function initLeafletNaverMapFallback() {
-      if (leafletMap) return;
-
-      const currentTheme = htmlEl.getAttribute('data-theme') || 'dark';
-      leafletMap = L.map('map', { zoomControl: false }).setView([37.5055, 127.0135], 13);
-      
-      updateMapTileTheme(currentTheme);
-
-      APARTMENTS.forEach(apt => {
-        const customIcon = L.divIcon({
-          className: 'custom-pin-wrap',
-          html: `
-            <div class="naver-map-pin" data-id="${apt.id}">
-              <div class="naver-pin-card">
-                <div class="naver-pin-title">
-                  <span class="naver-pin-rank">TOP ${apt.rank}</span>
-                  ${apt.name}
-                </div>
-                <div class="naver-pin-price">${apt.price}</div>
-              </div>
-              <div class="naver-pin-arrow"></div>
-            </div>
-          `,
-          iconSize: [90, 42],
-          iconAnchor: [45, 42]
-        });
-
-        const marker = L.marker([apt.lat, apt.lng], { icon: customIcon }).addTo(leafletMap);
-        marker.on('click', (ev) => {
-          if (ev && ev.originalEvent) ev.originalEvent.stopPropagation();
-          leafletMap.flyTo([apt.lat, apt.lng], 15, { duration: 1 });
-          openDetailDrawer(apt);
-        });
-      });
-
-      leafletMap.on('click', () => {
-        if (detailDrawer && detailDrawer.classList.contains('is-open')) {
-          detailDrawer.classList.remove('is-open');
-        }
-      });
-    }
-
-    // Focus Apartment on Map Pan/Fly
+    // Focus Apartment on Naver Map
     function focusApartmentOnMap(apt) {
       if (naverMap && window.naver && window.naver.maps) {
         const targetPos = new naver.maps.LatLng(apt.lat, apt.lng);
         naverMap.panTo(targetPos);
         naverMap.setZoom(15);
-      } else if (leafletMap) {
-        leafletMap.flyTo([apt.lat, apt.lng], 15, { duration: 1.2 });
       }
       openDetailDrawer(apt);
     }
@@ -1285,10 +1202,8 @@
           setActiveMapTypeBtn(btnNormal);
           if (naverMap && window.naver && window.naver.maps) {
             naverMap.setMapTypeId(naver.maps.MapTypeId.NORMAL);
-          } else if (leafletMap && currentTileLayer) {
-            const currentTheme = htmlEl.getAttribute('data-theme') || 'dark';
-            leafletMap.removeLayer(currentTileLayer);
-            currentTileLayer = L.tileLayer(currentTheme === 'dark' ? DARK_TILE_URL : LIGHT_TILE_URL, { maxZoom: 19 }).addTo(leafletMap);
+          } else {
+            openNaverKeyModal();
           }
         });
       }
@@ -1298,9 +1213,8 @@
           setActiveMapTypeBtn(btnSat);
           if (naverMap && window.naver && window.naver.maps) {
             naverMap.setMapTypeId(naver.maps.MapTypeId.HYBRID);
-          } else if (leafletMap && currentTileLayer) {
-            leafletMap.removeLayer(currentTileLayer);
-            currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Esri Satellite' }).addTo(leafletMap);
+          } else {
+            openNaverKeyModal();
           }
         });
       }
@@ -1310,9 +1224,8 @@
           setActiveMapTypeBtn(btnTerrain);
           if (naverMap && window.naver && window.naver.maps) {
             naverMap.setMapTypeId(naver.maps.MapTypeId.TERRAIN);
-          } else if (leafletMap && currentTileLayer) {
-            leafletMap.removeLayer(currentTileLayer);
-            currentTileLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'OpenTopoMap' }).addTo(leafletMap);
+          } else {
+            openNaverKeyModal();
           }
         });
       }
