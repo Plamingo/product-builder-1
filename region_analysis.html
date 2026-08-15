@@ -15,24 +15,38 @@
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="https://unpkg.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Leaflet Map CSS (Fallback Support) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /> -->
 
   <!-- Naver Maps API v3 Script Loader -->
   <script>
     (function() {
-      const savedKey = localStorage.getItem('findbench_naver_client_id') || 'g1x5c90b3m';
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=' + savedKey + '&submodules=geocoder';
-      script.async = false;
-      script.onerror = function() {
-        console.warn('Naver Maps API load warning: using fallback base map engine.');
-      };
-      document.head.appendChild(script);
+      // HTML 직접 수정 시 아래 기본값을 변경하거나, 웹 UI의 'Key' 버튼을 통해 입력 가능합니다.
+      const DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID';
+      const storedKey = localStorage.getItem('findbench_naver_client_id');
+      const activeKey = (storedKey && storedKey.trim() !== '' && storedKey !== 'YOUR_CLIENT_ID') 
+        ? storedKey.trim() 
+        : DEFAULT_CLIENT_ID;
+
+      window.__NAVER_CLIENT_ID__ = activeKey;
+
+      if (activeKey && activeKey !== 'YOUR_CLIENT_ID') {
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.id = 'naver-map-sdk';
+        script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(activeKey) + '&submodules=geocoder';
+        script.async = false;
+        script.onerror = function() {
+          console.warn('Naver Maps API load error: check Client ID or Web Service URL registration.');
+          window.__NAVER_LOAD_ERROR__ = true;
+        };
+        document.head.appendChild(script);
+      } else {
+        window.__NAVER_LOAD_ERROR__ = 'NOT_CONFIGURED';
+      }
     })();
   </script>
   <link rel="stylesheet" href="css/style.css">
@@ -368,7 +382,7 @@
   <!-- Naver Client ID Settings Modal -->
   <div id="naver-key-modal" class="fav-modal">
     <div id="naver-key-overlay" class="fav-modal-overlay"></div>
-    <div class="fav-modal-dialog" style="width: min(520px, 92vw);">
+    <div class="fav-modal-dialog" style="width: min(540px, 92vw);">
       <div class="fav-modal-header">
         <div class="fav-modal-title">
           <i class="fa-solid fa-key" style="color: var(--accent-aqua);"></i>
@@ -380,16 +394,33 @@
       </div>
       <div class="fav-modal-body" style="padding: 24px; font-size: 0.88rem; line-height: 1.6;">
         <p style="margin-bottom: 12px; color: var(--color-text-muted);">
-          네이버 클라우드 플랫폼(NCP)에서 발급받은 <strong>Application Client ID</strong>를 입력하시면 네이버 지도 v3 API가 연동됩니다.
+          네이버 클라우드 플랫폼(NCP)에서 발급받은 <strong>Application Client ID (Key ID)</strong>를 입력하시면 네이버 지도 v3 API가 연동됩니다.
         </p>
         <div style="margin-bottom: 16px;">
           <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: var(--accent-aqua);">
-            NCP Client ID
+            NCP Client ID (Key ID)
           </label>
-          <input type="text" id="naver-client-id-input" class="calc-input" placeholder="예: g1x5c90b3m" style="padding: 10px 14px; font-size: 0.9rem;">
+          <input type="text" id="naver-client-id-input" class="calc-input" placeholder="예: ncpKeyId 또는 Client ID 입력" style="padding: 10px 14px; font-size: 0.9rem;">
         </div>
+
+        <!-- Domain / Web URL Guide for Auth Success -->
+        <div style="font-size: 0.8rem; background: rgba(56, 189, 248, 0.08); padding: 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.25); margin-bottom: 14px;">
+          <div style="font-weight: 700; color: var(--accent-aqua); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-circle-info"></i> 인증 성공을 위한 필수 설정 (NCP 콘솔)
+          </div>
+          <div style="color: var(--color-text-muted); font-size: 0.78rem; line-height: 1.5;">
+            NCP 콘솔 &gt; AI·NAVER API &gt; Application [수정] &gt; <strong>Web 서비스 URL</strong>에 아래 현재 주소를 등록해야 401 인증 실패가 발생하지 않습니다:
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
+            <code id="current-origin-url" style="color: #38bdf8; font-weight: 600; font-size: 0.82rem; word-break: break-all;"></code>
+            <button type="button" id="copy-origin-btn" class="glass-btn" style="padding: 4px 10px; font-size: 0.75rem; margin-left: auto; white-space: nowrap; cursor: pointer;">
+              <i class="fa-solid fa-copy"></i> 복사
+            </button>
+          </div>
+        </div>
+
         <div style="font-size: 0.78rem; color: var(--color-text-subtle); background: rgba(255,255,255,0.04); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border-subtle);">
-          ℹ️ Client ID 변경 후 저장 시 페이지가 자동으로 새로고침됩니다.
+          ℹ️ Client ID 저장 시 페이지가 자동으로 새로고침되며 네이버 지도 v3 API가 활성화됩니다.
         </div>
       </div>
       <div class="fav-modal-footer">
@@ -610,7 +641,7 @@
 
     // Get Active Naver Client ID
     function getNaverClientId() {
-      return localStorage.getItem('findbench_naver_client_id') || 'g1x5c90b3m';
+      return localStorage.getItem('findbench_naver_client_id') || 'YOUR_CLIENT_ID';
     }
 
     // Theme Toggle
@@ -677,17 +708,51 @@
 
     // Main Map Initialization Entry Point
     function initMap() {
+      const activeKey = window.__NAVER_CLIENT_ID__ || getNaverClientId();
+      const isConfigured = activeKey && activeKey !== 'YOUR_CLIENT_ID';
+
       if (window.naver && window.naver.maps) {
         initNaverNativeMap();
-      } else {
-        // Fallback or retry after brief delay if script is still loading
-        setTimeout(() => {
+      } else if (isConfigured && !window.__NAVER_LOAD_ERROR__) {
+        // Wait a short moment if script is still downloading
+        let retries = 0;
+        const checkTimer = setInterval(() => {
+          retries++;
           if (window.naver && window.naver.maps) {
+            clearInterval(checkTimer);
             initNaverNativeMap();
-          } else {
+          } else if (retries > 6 || window.__NAVER_LOAD_ERROR__) {
+            clearInterval(checkTimer);
+            updateBadgeStatus('error');
             initLeafletNaverMapFallback();
           }
-        }, 400);
+        }, 200);
+      } else {
+        updateBadgeStatus(isConfigured ? 'error' : 'unconfigured');
+        initLeafletNaverMapFallback();
+      }
+    }
+
+    // Status Badge Updater
+    function updateBadgeStatus(status) {
+      const badge = document.getElementById('naver-status-badge');
+      if (!badge) return;
+
+      badge.style.cursor = 'pointer';
+      badge.title = '클릭하여 네이버 Client ID 및 도메인 설정을 확인하세요';
+
+      if (status === 'live') {
+        badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> NAVER MAPS API v3 Live';
+        badge.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+        badge.style.color = '#4ade80';
+      } else if (status === 'unconfigured') {
+        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Client ID 미설정 (클릭)';
+        badge.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+        badge.style.color = '#fbbf24';
+      } else {
+        badge.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> 지도 인증 실패 / 대체 지도 (클릭)';
+        badge.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+        badge.style.color = '#f87171';
       }
     }
 
@@ -763,15 +828,11 @@
           }
         });
 
-        const badge = document.getElementById('naver-status-badge');
-        if (badge) {
-          badge.innerHTML = '<i class="fa-solid fa-check-circle"></i> NAVER MAPS API v3 Live';
-          badge.style.borderColor = 'rgba(34, 197, 94, 0.5)';
-          badge.style.color = '#4ade80';
-        }
+        updateBadgeStatus('live');
 
       } catch (err) {
         console.warn('Naver Maps native init fallback triggered:', err);
+        updateBadgeStatus('error');
         initLeafletNaverMapFallback();
       }
     }
@@ -817,11 +878,6 @@
           detailDrawer.classList.remove('is-open');
         }
       });
-
-      const badge = document.getElementById('naver-status-badge');
-      if (badge) {
-        badge.innerHTML = '<i class="fa-solid fa-map"></i> NAVER MAP 베이스';
-      }
     }
 
     // Focus Apartment on Map Pan/Fly
@@ -1229,6 +1285,10 @@
           setActiveMapTypeBtn(btnNormal);
           if (naverMap && window.naver && window.naver.maps) {
             naverMap.setMapTypeId(naver.maps.MapTypeId.NORMAL);
+          } else if (leafletMap && currentTileLayer) {
+            const currentTheme = htmlEl.getAttribute('data-theme') || 'dark';
+            leafletMap.removeLayer(currentTileLayer);
+            currentTileLayer = L.tileLayer(currentTheme === 'dark' ? DARK_TILE_URL : LIGHT_TILE_URL, { maxZoom: 19 }).addTo(leafletMap);
           }
         });
       }
@@ -1238,6 +1298,9 @@
           setActiveMapTypeBtn(btnSat);
           if (naverMap && window.naver && window.naver.maps) {
             naverMap.setMapTypeId(naver.maps.MapTypeId.HYBRID);
+          } else if (leafletMap && currentTileLayer) {
+            leafletMap.removeLayer(currentTileLayer);
+            currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Esri Satellite' }).addTo(leafletMap);
           }
         });
       }
@@ -1247,6 +1310,9 @@
           setActiveMapTypeBtn(btnTerrain);
           if (naverMap && window.naver && window.naver.maps) {
             naverMap.setMapTypeId(naver.maps.MapTypeId.TERRAIN);
+          } else if (leafletMap && currentTileLayer) {
+            leafletMap.removeLayer(currentTileLayer);
+            currentTileLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'OpenTopoMap' }).addTo(leafletMap);
           }
         });
       }
@@ -1257,6 +1323,8 @@
           btnTraffic.classList.toggle('active', isTrafficActive);
           if (naverMap && activeTrafficLayer) {
             activeTrafficLayer.setMap(isTrafficActive ? naverMap : null);
+          } else if (!naverMap) {
+            openNaverKeyModal();
           }
         });
       }
@@ -1267,31 +1335,67 @@
           btnCadastral.classList.toggle('active', isCadastralActive);
           if (naverMap && activeCadastralLayer) {
             activeCadastralLayer.setMap(isCadastralActive ? naverMap : null);
+          } else if (!naverMap) {
+            openNaverKeyModal();
           }
         });
       }
 
-      // Key Modal Events
+      // Key Modal Events & Origin Helper
       const naverKeyModal = document.getElementById('naver-key-modal');
       const naverKeyOverlay = document.getElementById('naver-key-overlay');
       const naverKeyClose = document.getElementById('naver-key-close');
       const naverKeySave = document.getElementById('naver-key-save');
       const naverKeyReset = document.getElementById('naver-key-reset');
       const naverKeyInput = document.getElementById('naver-client-id-input');
+      const currentOriginEl = document.getElementById('current-origin-url');
+      const copyOriginBtn = document.getElementById('copy-origin-btn');
+      const statusBadge = document.getElementById('naver-status-badge');
 
-      if (btnKey) {
-        btnKey.addEventListener('click', () => {
-          if (naverKeyInput) naverKeyInput.value = getNaverClientId();
-          if (naverKeyModal) naverKeyModal.classList.add('is-open');
-        });
+      function openNaverKeyModal() {
+        const activeKey = getNaverClientId();
+        if (naverKeyInput) naverKeyInput.value = (activeKey !== 'YOUR_CLIENT_ID') ? activeKey : '';
+        
+        // Show current Web Service URL origin
+        if (currentOriginEl) {
+          const origin = window.location.origin && window.location.origin !== 'null' 
+            ? window.location.origin 
+            : window.location.protocol === 'file:' 
+              ? 'http://localhost:5500 (file:// 직접 열기 불가, 로컬 서버 필요)' 
+              : window.location.host;
+          currentOriginEl.textContent = origin;
+        }
+        if (naverKeyModal) naverKeyModal.classList.add('is-open');
       }
 
       function closeNaverKeyModal() {
         if (naverKeyModal) naverKeyModal.classList.remove('is-open');
       }
 
+      if (btnKey) btnKey.addEventListener('click', openNaverKeyModal);
+      if (statusBadge) statusBadge.addEventListener('click', openNaverKeyModal);
       if (naverKeyOverlay) naverKeyOverlay.addEventListener('click', closeNaverKeyModal);
       if (naverKeyClose) naverKeyClose.addEventListener('click', closeNaverKeyModal);
+
+      // Copy Origin URL to clipboard
+      if (copyOriginBtn && currentOriginEl) {
+        copyOriginBtn.addEventListener('click', () => {
+          const textToCopy = (window.location.origin && window.location.origin !== 'null') 
+            ? window.location.origin 
+            : 'http://localhost:5500';
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalHtml = copyOriginBtn.innerHTML;
+            copyOriginBtn.innerHTML = '<i class="fa-solid fa-check"></i> 복사됨!';
+            copyOriginBtn.style.color = '#4ade80';
+            setTimeout(() => {
+              copyOriginBtn.innerHTML = originalHtml;
+              copyOriginBtn.style.color = '';
+            }, 2000);
+          }).catch(() => {
+            alert('클립보드 복사 실패: ' + textToCopy);
+          });
+        });
+      }
 
       if (naverKeySave) {
         naverKeySave.addEventListener('click', () => {
@@ -1309,7 +1413,7 @@
       if (naverKeyReset) {
         naverKeyReset.addEventListener('click', () => {
           localStorage.removeItem('findbench_naver_client_id');
-          if (naverKeyInput) naverKeyInput.value = 'g1x5c90b3m';
+          if (naverKeyInput) naverKeyInput.value = '';
           closeNaverKeyModal();
           location.reload();
         });
