@@ -295,14 +295,14 @@
       </div>
 
       <!-- Loading Spinner -->
-      <div id="loading-state" class="loading-container is-hidden">
+      <div id="loading-state" class="loading-container" style="display: none;">
         <div class="spinner"></div>
         <span>Supabase에서 실거래 데이터를 안전하게 가져오는 중...</span>
       </div>
 
       <!-- Data Table -->
       <div class="table-container">
-        <table id="deals-table" class="glass-table is-hidden">
+        <table id="deals-table" class="glass-table" style="display: none;">
           <thead>
             <tr>
               <th id="th-id" data-col="id">ID <i class="fa-solid fa-sort sort-icon"></i></th>
@@ -376,19 +376,57 @@
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     
-    const response = await fetch('/config');
-    const config = await response.json();
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = config;
+    // Default Supabase Configuration Fallback
+    let SUPABASE_URL = "https://fxjtykeuznhnyctyqalc.supabase.co/";
+    let SUPABASE_ANON_KEY = "sb_publishable_cPFw8hOTys96SJkuG_k0ow_DOf4vxAd";
+
+    try {
+      const response = await fetch('/config');
+      if (response.ok) {
+        const config = await response.json();
+        if (config && config.SUPABASE_URL) SUPABASE_URL = config.SUPABASE_URL;
+        if (config && config.SUPABASE_ANON_KEY) SUPABASE_ANON_KEY = config.SUPABASE_ANON_KEY;
+      }
+    } catch (e) {
+      console.info("Using embedded Supabase configuration.", e);
+    }
 
     const TABLE_NAME = "apartment_deals";
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    console.log(SUPABASE_URL)
 
     let rawData = [];
     let currentSortedData = [];
     let sortColumn = 'dealDateStr';
     let sortAscending = false;
+
+    // -------------------------------------------------------------
+    // UI View State Controller
+    // -------------------------------------------------------------
+    function setViewState(state, message = '') {
+      const loadingState = document.getElementById('loading-state');
+      const dealsTable = document.getElementById('deals-table');
+      const emptyState = document.getElementById('empty-state');
+
+      if (loadingState) {
+        loadingState.style.display = (state === 'loading') ? 'flex' : 'none';
+        loadingState.classList.toggle('is-hidden', state !== 'loading');
+      }
+
+      if (dealsTable) {
+        dealsTable.style.display = (state === 'table') ? 'table' : 'none';
+        dealsTable.classList.toggle('is-hidden', state !== 'table');
+      }
+
+      if (emptyState) {
+        const showEmpty = (state === 'initial' || state === 'empty' || state === 'error');
+        emptyState.style.display = showEmpty ? 'block' : 'none';
+        emptyState.classList.toggle('is-hidden', !showEmpty);
+        if (message) {
+          const p = emptyState.querySelector('p');
+          if (p) p.textContent = message;
+        }
+      }
+    }
 
     // -------------------------------------------------------------
     // Left Hover Proximity Sidebar Logic
@@ -485,13 +523,23 @@
       tbody.innerHTML = '';
 
       if (favorites.length === 0) {
-        if (emptyState) emptyState.style.display = 'block';
-        if (tableWrap) tableWrap.style.display = 'none';
+        if (emptyState) {
+          emptyState.style.display = 'block';
+          emptyState.classList.remove('is-hidden');
+        }
+        if (tableWrap) {
+          tableWrap.style.display = 'none';
+        }
         return;
       }
 
-      if (emptyState) emptyState.style.display = 'none';
-      if (tableWrap) tableWrap.style.display = 'block';
+      if (emptyState) {
+        emptyState.style.display = 'none';
+        emptyState.classList.add('is-hidden');
+      }
+      if (tableWrap) {
+        tableWrap.style.display = 'block';
+      }
 
       const fragment = document.createDocumentFragment();
       favorites.forEach(apt => {
@@ -553,22 +601,25 @@
     htmlEl.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
 
-    themeToggleBtn.addEventListener('click', () => {
-      const currentTheme = htmlEl.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      htmlEl.setAttribute('data-theme', newTheme);
-      localStorage.setItem('findbench_theme', newTheme);
-      updateThemeIcon(newTheme);
-    });
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = htmlEl.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        htmlEl.setAttribute('data-theme', newTheme);
+        localStorage.setItem('findbench_theme', newTheme);
+        updateThemeIcon(newTheme);
+      });
+    }
 
     function updateThemeIcon(theme) {
+      if (!themeToggleBtn) return;
       themeToggleBtn.innerHTML = theme === 'dark' 
         ? '<i class="fa-solid fa-sun"></i>' 
         : '<i class="fa-solid fa-moon"></i>';
     }
 
     // Debounce Utility for Performance
-    function debounce(fn, delay = 150) {
+    function debounce(fn, delay = 200) {
       let timer = null;
       return function(...args) {
         clearTimeout(timer);
@@ -577,21 +628,28 @@
     }
 
     // Event Listeners
-    document.getElementById('region-select').addEventListener('change', () => {
-      const keyword = document.getElementById('search-input').value.trim();
-      if (keyword) fetchApartmentDeals();
-    });
-    document.getElementById('year-select').addEventListener('change', () => {
-      const keyword = document.getElementById('search-input').value.trim();
-      if (keyword) fetchApartmentDeals();
-    });
-    document.getElementById('search-input').addEventListener('input', debounce(handleSearch, 150));
-    document.getElementById('search-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        fetchApartmentDeals();
-      }
-    });
-    document.getElementById('btn-search').addEventListener('click', fetchApartmentDeals);
+    const regionSelect = document.getElementById('region-select');
+    const yearSelect = document.getElementById('year-select');
+    const searchInput = document.getElementById('search-input');
+    const btnSearch = document.getElementById('btn-search');
+
+    if (regionSelect) {
+      regionSelect.addEventListener('change', fetchApartmentDeals);
+    }
+    if (yearSelect) {
+      yearSelect.addEventListener('change', fetchApartmentDeals);
+    }
+    if (searchInput) {
+      searchInput.addEventListener('input', debounce(handleSearch, 200));
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          fetchApartmentDeals();
+        }
+      });
+    }
+    if (btnSearch) {
+      btnSearch.addEventListener('click', fetchApartmentDeals);
+    }
 
     // Table Header Click Sorting
     const columns = ['id', 'aptNm', 'umdNm', 'dealAmountVal', 'dealDateStr', 'excluUseAr', 'floor', 'buildYear'];
@@ -602,63 +660,25 @@
       }
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // 초기에는 데이터를 조회하지 않음
-      const loadingState = document.getElementById('loading-state');
-      const dealsTable = document.getElementById('deals-table');
-      const emptyState = document.getElementById('empty-state');
-      const countBadge = document.getElementById('table-count-badge');
-
-      if (loadingState) loadingState.style.display = 'none';
-      if (dealsTable) dealsTable.style.display = 'none';
-      if (emptyState) {
-        emptyState.style.display = 'block';
-        const p = emptyState.querySelector('p');
-        if (p) p.textContent = '아파트명을 입력한 후 검색해 주세요.';
-      }
-      if (countBadge) countBadge.textContent = '(조회 전)';
-
-      updateSummaryStats([]);
-
-      // Live Active Users Fluctuation
-      setInterval(() => {
-        const el = document.getElementById('live-user-count');
-        if (el) {
-          const count = 3840 + Math.floor(Math.random() * 15);
-          el.textContent = `${count.toLocaleString()}명 실시간 접속`;
-        }
-      }, 4000);
-    });
-
     // -------------------------------------------------------------
     // 데이터 불러오기 (Supabase DB Query)
     // -------------------------------------------------------------
     async function fetchApartmentDeals() {
-      const loadingState = document.getElementById('loading-state');
-      const dealsTable = document.getElementById('deals-table');
-      const emptyState = document.getElementById('empty-state');
       const countBadge = document.getElementById('table-count-badge');
+      const selectedRegion = regionSelect ? regionSelect.value : '';
+      const selectedYear = yearSelect ? yearSelect.value : 'ALL';
+      const keyword = searchInput ? searchInput.value.trim() : '';
 
-      const selectedRegion = document.getElementById('region-select').value;
-      const selectedYear = document.getElementById('year-select').value;
-      const keyword = document.getElementById('search-input').value.trim();
-
-      if (!keyword) {
-        loadingState.style.display = 'none';
-        dealsTable.style.display = 'none';
-        emptyState.style.display = 'block';
-        const p = emptyState.querySelector('p');
-        if (p) p.textContent = '아파트명을 입력한 후 검색해 주세요.';
-        countBadge.textContent = '(0건)';
+      if (!keyword && !selectedRegion) {
+        setViewState('empty', '조회할 지역을 선택하거나 아파트명을 입력해 주세요.');
+        if (countBadge) countBadge.textContent = '(0건)';
         rawData = [];
         updateSummaryStats([]);
         return;
       }
 
-      loadingState.style.display = 'flex';
-      dealsTable.style.display = 'none';
-      emptyState.style.display = 'none';
-      countBadge.textContent = '(조회 중...)';
+      setViewState('loading');
+      if (countBadge) countBadge.textContent = '(조회 중...)';
 
       try {
         let query = supabaseClient.from(TABLE_NAME)
@@ -672,7 +692,7 @@
           query = query.eq('dealYear', parseInt(selectedYear, 10));
         }
 
-        const sanitizedKeyword = keyword.replace(/[\(\)',]/g, '');
+        const sanitizedKeyword = keyword.replace(/[\(\)',%_]/g, '').trim();
         if (sanitizedKeyword) {
           query = query.or(`aptNm.ilike.%${sanitizedKeyword}%,umdNm.ilike.%${sanitizedKeyword}%,jibun.ilike.%${sanitizedKeyword}%`);
         }
@@ -685,9 +705,8 @@
 
         if (error) {
           console.error('데이터 조회 실패:', error.message);
-          loadingState.style.display = 'none';
-          emptyState.style.display = 'block';
-          emptyState.querySelector('p').textContent = `데이터를 가져오는 중 오류가 발생했습니다: ${error.message}`;
+          setViewState('error', `데이터를 가져오는 중 오류가 발생했습니다: ${error.message}`);
+          if (countBadge) countBadge.textContent = '(오류 발생)';
           return;
         }
 
@@ -713,12 +732,12 @@
         handleSearch();
       } catch (err) {
         console.error('예외 발생:', err);
-        loadingState.style.display = 'none';
-        emptyState.style.display = 'block';
+        setViewState('error', '네트워크 연결 또는 쿼리 실행 중 오류가 발생했습니다.');
+        if (countBadge) countBadge.textContent = '(오류)';
       }
     }
 
-    // 금액 포맷터 (예: 185000 -> 18억 5,000만원)
+    // 금액 포맷터 (예: 185000 -> 18억 5,000만)
     function formatKoreanPrice(amount) {
       if (!amount) return '-';
       const uk = Math.floor(amount / 10000);
@@ -734,26 +753,23 @@
     // 테이블 렌더링 & 통계 업데이트
     // -------------------------------------------------------------
     function renderTable(dataList) {
-      const loadingState = document.getElementById('loading-state');
-      const dealsTable = document.getElementById('deals-table');
-      const emptyState = document.getElementById('empty-state');
       const tbody = document.getElementById('table-body');
       const countBadge = document.getElementById('table-count-badge');
 
+      if (!tbody) return;
       tbody.innerHTML = '';
-      loadingState.style.display = 'none';
 
-      countBadge.textContent = `(총 ${dataList.length.toLocaleString()}건)`;
+      if (countBadge) {
+        countBadge.textContent = `(총 ${dataList.length.toLocaleString()}건)`;
+      }
       updateSummaryStats(dataList);
 
       if (dataList.length === 0) {
-        dealsTable.style.display = 'none';
-        emptyState.style.display = 'block';
+        setViewState('empty', '조건에 일치하는 실거래 내역이 없습니다.');
         return;
       }
 
-      emptyState.style.display = 'none';
-      dealsTable.style.display = 'table';
+      setViewState('table');
 
       const fragment = document.createDocumentFragment();
       dataList.forEach(item => {
@@ -795,6 +811,8 @@
       const maxPriceEl = document.getElementById('stat-max-price');
       const avgPriceEl = document.getElementById('stat-avg-price');
 
+      if (!totalCountEl || !maxPriceEl || !avgPriceEl) return;
+
       if (!dataList || dataList.length === 0) {
         totalCountEl.textContent = '0건';
         maxPriceEl.textContent = '-';
@@ -821,7 +839,7 @@
     // 검색어 필터링
     // -------------------------------------------------------------
     function handleSearch() {
-      const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+      const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
       let filtered = rawData.filter(item => {
         if (!keyword) return true;
@@ -872,12 +890,37 @@
 
         if (col === sortColumn) {
           th.classList.add('is-sorted');
-          icon.className = sortAscending ? 'fa-solid fa-sort-up sort-icon' : 'fa-solid fa-sort-down sort-icon';
+          if (icon) icon.className = sortAscending ? 'fa-solid fa-sort-up sort-icon' : 'fa-solid fa-sort-down sort-icon';
         } else {
           th.classList.remove('is-sorted');
-          icon.className = 'fa-solid fa-sort sort-icon';
+          if (icon) icon.className = 'fa-solid fa-sort sort-icon';
         }
       });
+    }
+
+    // -------------------------------------------------------------
+    // App Initialization
+    // -------------------------------------------------------------
+    function initApp() {
+      setViewState('initial', '아파트명을 입력하거나 지역/연도를 선택한 후 검색 버튼을 눌러주세요.');
+      const countBadge = document.getElementById('table-count-badge');
+      if (countBadge) countBadge.textContent = '(조회 전)';
+      updateSummaryStats([]);
+
+      // Live Active Users Fluctuation
+      setInterval(() => {
+        const el = document.getElementById('live-user-count');
+        if (el) {
+          const count = 3840 + Math.floor(Math.random() * 15);
+          el.textContent = `${count.toLocaleString()}명 실시간 접속`;
+        }
+      }, 4000);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
     }
   </script>
 </body>

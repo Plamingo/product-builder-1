@@ -425,6 +425,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
+
+    const response = await fetch('/config');
+    const config = await response.json();
+    const { MAP_API } = config;
+    console.log(MAP_API)
+
     // Premium Apartment Dataset
     const APARTMENTS = [
       {
