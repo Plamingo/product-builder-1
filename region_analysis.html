@@ -18,37 +18,50 @@
   <!-- <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Italiana&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Naver Maps API v3 Script Loader with Cloudflare Functions /config MAP_API Support -->
+  <!-- Naver Maps API v3 Script Loader: 환경변수 MAP_API 자동 로드 -->
   <script>
     window.__NAVER_MAP_READY_PROMISE__ = (async function() {
       const DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID';
-      let envMapApi = '';
+      let mapApiKey = '';
 
-      // 1. Fetch MAP_API from Cloudflare Functions /config endpoint
+      // 1. Cloudflare Functions /config 엔드포인트에서 환경변수 MAP_API 가져오기
       try {
         const res = await fetch('/config');
         if (res.ok) {
           const cfg = await res.json();
           if (cfg && cfg.MAP_API && cfg.MAP_API.trim() !== '') {
-            envMapApi = cfg.MAP_API.trim();
-            window.__ENV_MAP_API__ = envMapApi;
+            mapApiKey = cfg.MAP_API.trim();
+            window.__ENV_MAP_API__ = mapApiKey;
           }
         }
       } catch (e) {
-        console.info('Config fetch skipped or local environment active.', e);
+        console.info('서버 /config 엔드포인트 조회 실패, 로컬 config.js를 확인합니다.', e);
       }
 
-      // 2. Priority: localStorage override > Server Environment MAP_API > DEFAULT_CLIENT_ID
+      // 2. /config에 없을 경우 로컬 config.js 모듈에서 MAP_API 확인
+      if (!mapApiKey) {
+        try {
+          const localConfig = await import('./config.js');
+          if (localConfig && localConfig.MAP_API && localConfig.MAP_API.trim() !== '') {
+            mapApiKey = localConfig.MAP_API.trim();
+            window.__ENV_MAP_API__ = mapApiKey;
+          }
+        } catch (e) {
+          console.info('로컬 config.js 로드 생략됨.', e);
+        }
+      }
+
+      // 3. 우선순위: 환경변수 MAP_API -> 브라우저 localStorage -> 기본값
       const storedKey = localStorage.getItem('findbench_naver_client_id');
-      const activeKey = (storedKey && storedKey.trim() !== '' && storedKey !== DEFAULT_CLIENT_ID)
-        ? storedKey.trim()
-        : (envMapApi && envMapApi !== DEFAULT_CLIENT_ID)
-          ? envMapApi
+      const activeKey = (mapApiKey && mapApiKey !== DEFAULT_CLIENT_ID)
+        ? mapApiKey
+        : (storedKey && storedKey.trim() !== '' && storedKey !== DEFAULT_CLIENT_ID)
+          ? storedKey.trim()
           : DEFAULT_CLIENT_ID;
 
       window.__NAVER_CLIENT_ID__ = activeKey;
 
-      // 3. Dynamically inject Naver Maps SDK v3
+      // 4. 네이버 지도 v3 SDK 동적 주입 및 로드
       return new Promise((resolve) => {
         const script = document.createElement('script');
         script.type = 'text/javascript';
@@ -56,6 +69,7 @@
         script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(activeKey) + '&submodules=geocoder';
         script.async = true;
         script.onload = function() {
+          console.log('네이버 지도 API v3 로드 완료 (Client ID:', activeKey === DEFAULT_CLIENT_ID ? '미등록' : activeKey.substring(0, 4) + '****)');
           resolve(true);
         };
         script.onerror = function() {
@@ -651,11 +665,11 @@
     let isTrafficActive = false;
     let isCadastralActive = false;
 
-    // Get Active Naver Client ID (LocalStorage > Server MAP_API > DEFAULT)
+    // Get Active Naver Client ID (Server MAP_API > LocalStorage > DEFAULT)
     function getNaverClientId() {
+      if (window.__ENV_MAP_API__ && window.__ENV_MAP_API__.trim()) return window.__ENV_MAP_API__.trim();
       const stored = localStorage.getItem('findbench_naver_client_id');
       if (stored && stored.trim()) return stored.trim();
-      if (window.__ENV_MAP_API__ && window.__ENV_MAP_API__.trim()) return window.__ENV_MAP_API__.trim();
       if (window.__NAVER_CLIENT_ID__ && window.__NAVER_CLIENT_ID__ !== 'YOUR_CLIENT_ID') return window.__NAVER_CLIENT_ID__;
       return 'YOUR_CLIENT_ID';
     }
