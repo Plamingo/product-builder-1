@@ -1818,3 +1818,276 @@ main {
   border-color: #cbd5e1;
   color: #0f172a;
 }
+
+/* --------------------------------------------------------------------------
+   12. DRAWER & COMPONENT UTILITY CLASSES
+   -------------------------------------------------------------------------- */
+.header-left-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.drawer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-fav-btn {
+  font-size: 0.78rem;
+  padding: 6px 12px;
+}
+
+.text-deal {
+  color: #059669 !important;
+}
+.text-jeonse {
+  color: #0284c7 !important;
+}
+.text-gap {
+  color: #6d28d9 !important;
+}
+.text-warning-star {
+  color: #f59e0b !important;
+}
+.text-center {
+  text-align: center !important;
+}
+.text-aqua {
+  color: var(--accent-aqua) !important;
+}
+
+.drawer-section-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawer-specs-box {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-subtle);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+[data-theme="light"] .drawer-specs-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.drawer-school-info {
+  margin-top: 6px;
+  color: var(--accent-aqua);
+  font-weight: 700;
+}
+
+.drawer-listings-list,
+.drawer-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-listing-item {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-subtle);
+  font-size: 0.8rem;
+}
+[data-theme="light"] .drawer-listing-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.drawer-listing-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.drawer-listing-sub {
+  color: var(--color-text-subtle);
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.drawer-calc-row {
+  display: flex;
+  gap: 8px;
+}
+
+.drawer-calc-col {
+  flex: 1;
+}
+
+.drawer-calc-label {
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.drawer-calc-result {
+  font-size: 0.82rem;
+  padding: 10px;
+  background: rgba(2, 132, 199, 0.1);
+  border-radius: 6px;
+  color: #0284c7;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+}
+[data-theme="light"] .drawer-calc-result {
+  background: #e0f2fe;
+}
+
+.drawer-review-item {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-subtle);
+  font-size: 0.8rem;
+}
+[data-theme="light"] .drawer-review-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.drawer-review-header {
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.drawer-review-date {
+  font-size: 0.7rem;
+  color: var(--color-text-subtle);
+  margin-left: 6px;
+}
+
+.drawer-review-body {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+}
+
+.domain-guide-box {
+  font-size: 0.8rem;
+  background: rgba(56, 189, 248, 0.08);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  margin-bottom: 14px;
+}
+
+.domain-guide-title {
+  font-weight: 700;
+  color: var(--accent-aqua);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.domain-guide-desc {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.domain-code-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+[data-theme="light"] .domain-code-box {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.domain-code-text {
+  color: #38bdf8;
+  font-weight: 600;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+[data-theme="light"] .domain-code-text {
+  color: #0284c7;
+}
+
+.domain-copy-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  margin-left: auto;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.modal-notice-box {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border-subtle);
+}
+[data-theme="light"] .modal-notice-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.modal-form-group {
+  margin-bottom: 16px;
+}
+
+.modal-form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--accent-aqua);
+}
+
+.modal-subtext {
+  margin-bottom: 12px;
+  color: var(--color-text-muted);
+}
+
+.modal-dialog--key {
+  width: min(540px, 92vw);
+}
+
+.modal-body--key {
+  padding: 24px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.empty-state-text {
+  font-size: 0.8rem;
+  color: var(--color-text-subtle);
+}
+
+.select-wrap--compact {
+  max-width: 180px;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+.apt-item-jeonse {
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+}
+
+
+
