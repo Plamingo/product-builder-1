@@ -426,6 +426,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
+    const response = await fetch('/config');
+    if (!response.ok) {
+      throw new Error('서버에서 설정 정보를 불러오지 못했습니다.');
+    }
+    
+    const config = await response.json();
+    const { MAP_API } = config;
+    
     // Premium Apartment Dataset
     const APARTMENTS = [
       {
